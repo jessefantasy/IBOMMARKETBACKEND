@@ -1,0 +1,189 @@
+import { Router } from "express";
+import UserSchema from "../schema/user.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import change from "../utils/change.js";
+import { createTransport } from "nodemailer";
+
+
+const UserRouter = Router();
+
+const hashPassword = async (password) => {
+  const salt = await bcrypt.genSalt(10);
+  const result = await bcrypt.hash(password, salt);
+  return result;
+};
+
+const transporter = createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: "amehharrison2020@gmail.com",
+    pass: process.env.MAILER,
+  },
+});
+  
+const sendPasswordResetEmail = (email, username, link) => {
+  const mailOptions = {
+    from: "amehharrison2020@gmail.com",
+    to: email,
+    subject: "Reset password",
+    html: `
+    <div >
+      <p>Hi ${username},</p>
+
+ 
+      <p>To reset your password  please click on the link:</p>
+
+      <p><a href="${link}">Reset password</a></p>
+
+      <p>If you are unable to click the link, please copy and paste it into your browser's address bar.</p>
+
+      <p>Please note that this link is valid for 10 mins  </p>
+      <p>Disregard this email if you did not request for a password change  </p>
+  
+    </div>
+  `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent : " + info.response);
+    }
+  });
+};
+
+const comparePassword = async (enteredPassword, savedPassword) => {
+  const isMatch = await bcrypt.compare(enteredPassword, savedPassword);
+  return isMatch;
+};
+
+UserRouter.post("/account/register", async (req, res) => {
+  try {
+    const hashedPassword = await hashPassword(req.body.password);
+    // const hashedUsername = await hashPassword(req.body.username);
+    const result = new UserSchema({
+      ...req.body,
+      password: hashedPassword,
+    });
+    await result.save();
+    res.status(200).json({ user: result });
+  } catch (error) { 
+    if(error.errorResponse.code == 11000) {
+  	 return res.status(400).json({ error });
+    }
+    res.status(500).json({ error });
+  }
+});
+
+UserRouter.post("/account/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await UserSchema.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ message: "Invalid username or password" });
+    }
+
+    const passwordMatch = await comparePassword(password, user.password);
+    if (!passwordMatch) {
+      return res.status(404).json({ message: "Invalid username or password" });
+    }
+    const token = jwt.sign({ Id: user._id }, process.env.JWTSECRET , { expiresIn: '30d' });
+
+    const sendUser = {
+      ...user._docs,
+      Id: user._id.toString(),
+      token,
+      password : "",
+      version : 0
+    };
+    res.status(200).json(change.mainChangeFunction(sendUser));
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+UserRouter.get("/account/current-user", async (req, res) => {
+	console.log("Getting current-user")
+  try {
+    const { authorization } = req.headers;
+
+    if (!authorization || authorization.length < 10) {
+      return res.status(400).json({ message: "Invalid token in header" });
+    }
+
+    const token = authorization.split("Bearer ")[1];
+    const userId = jwt.verify(token, process.env.JWTSECRET);
+    const user = await UserSchema.findOne({ _id: userId.Id });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "user not found",
+      });
+    }
+    console.log(userId)
+    console.log(token)
+    res.status(200).json({ ...user._doc, Token: userId.Id ,  Id: userId.Id , password : "" ,  BusinessId: user?.businessId });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+UserRouter.post("/account/send-password-recovery-email" , async (req,res) => {
+ console.log(req.baseUrl  , 124)
+  try{
+    const {email} = req.body; 
+    const user = await UserSchema.findOne({email : email})
+
+    if(!user) {
+      return res.status(404).json({message : "No user with this email!"})
+    }
+    const token = jwt.sign({ Id: user._id  , version : user.version ? user.version : 0 }, process.env.JWTSECRET , { expiresIn: '10m' });
+    console.log(process.env.BASE_URL)
+     
+    sendPasswordResetEmail(email ,user.username , process.env.BASE_URL + token)
+    res.status(200).json({message : "Sent to " + email})
+
+  } catch(error) {
+    console.log(error)
+    res.status(500).json(error)
+  } 
+})
+
+UserRouter.post("/account/reset-password" , async (req,res) => {
+ 
+  try{
+    const {password ,token } = req.body; 
+    const userId = jwt.verify(token, process.env.JWTSECRET);
+
+    console.log(userId.Id)
+
+    const user = await UserSchema.findById( userId.Id )
+
+    if(!user) {
+      return res.status(404).json({message : "No user found!"})
+    }  
+    else if(user.version !== userId.version) {
+      return res.status(404).json({message : "Token already used!"})
+    }
+
+    const newPassword = await hashPassword(password)
+
+    user.password = newPassword
+    user.version = user.version + 1
+    await user.save()
+     
+    // sendPasswordResetEmail(email ,"Ameh" , process.env.BASR_URL + token)
+    res.status(200).json({message : "password reset sucessful"})
+
+  } catch(error) {
+    console.log(error)
+    res.status(500).json(error)
+  } 
+})
+
+export default UserRouter;
+  
