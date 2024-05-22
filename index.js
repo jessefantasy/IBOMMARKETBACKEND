@@ -9,6 +9,8 @@ import UrgentRequestRouter from "./routes/urgentRequest.js";
 import CategoriesRouter from "./routes/categories.js";
 import UserRouter from "./routes/user.js";
 import BusinessesRouter from "./routes/business.js";
+import RolesRouter from "./routes/roles.js";
+import ManagerRouter from "./routes/manager.js";
 // import
 
 dotenv.config();
@@ -19,15 +21,17 @@ const corsOptions = {
 };
 
 const server = express();
-server.use(cors(corsOptions)); 
+server.use(cors(corsOptions));
 server.use(express.json());
 
 server.use("/", PostsRoute);
 server.use("/", AdvertSlideRoute);
 server.use("/", UrgentRequestRouter);
 server.use("/", CategoriesRouter);
-server.use("/", UserRouter); 
+server.use("/", UserRouter);
 server.use("/", BusinessesRouter);
+server.use("/", RolesRouter);
+server.use("/", ManagerRouter);
 server.get("/", (req, res) => {
   res.status(200).json({ message: "Done" });
 });

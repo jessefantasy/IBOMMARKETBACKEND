@@ -1,18 +1,24 @@
 import { Router } from "express";
 import UserSchema from "../schema/user.js";
-import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import change from "../utils/change.js";
 import { createTransport } from "nodemailer";
-
+import * as argon2 from "argon2";
+import ManagerSchema from "../schema/manager.js";
 
 const UserRouter = Router();
 
 const hashPassword = async (password) => {
-  const salt = await bcrypt.genSalt(10);
-  const result = await bcrypt.hash(password, salt);
+  const result = await argon2.hash(password);
   return result;
 };
+
+async function quickHash(pass) {
+  return await hashPassword(pass);
+}
+quickHash("Harrison").then((result) => {
+  console.log(result.split(",")[2]);
+});
 
 const transporter = createTransport({
   host: "smtp.gmail.com",
@@ -23,7 +29,7 @@ const transporter = createTransport({
     pass: process.env.MAILER,
   },
 });
-  
+
 const sendPasswordResetEmail = (email, username, link) => {
   const mailOptions = {
     from: "amehharrison2020@gmail.com",
@@ -57,7 +63,7 @@ const sendPasswordResetEmail = (email, username, link) => {
 };
 
 const comparePassword = async (enteredPassword, savedPassword) => {
-  const isMatch = await bcrypt.compare(enteredPassword, savedPassword);
+  const isMatch = await argon2.verify(enteredPassword, savedPassword);
   return isMatch;
 };
 
@@ -71,9 +77,9 @@ UserRouter.post("/account/register", async (req, res) => {
     });
     await result.save();
     res.status(200).json({ user: result });
-  } catch (error) { 
-    if(error.errorResponse.code == 11000) {
-  	 return res.status(400).json({ error });
+  } catch (error) {
+    if (error.errorResponse.code == 11000) {
+      return res.status(400).json({ error });
     }
     res.status(500).json({ error });
   }
@@ -91,14 +97,16 @@ UserRouter.post("/account/login", async (req, res) => {
     if (!passwordMatch) {
       return res.status(404).json({ message: "Invalid username or password" });
     }
-    const token = jwt.sign({ Id: user._id }, process.env.JWTSECRET , { expiresIn: '30d' });
+    const token = jwt.sign({ Id: user._id }, process.env.JWTSECRET, {
+      expiresIn: "30d",
+    });
 
     const sendUser = {
       ...user._docs,
       Id: user._id.toString(),
       token,
-      password : "",
-      version : 0
+      password: "",
+      version: 0,
     };
     res.status(200).json(change.mainChangeFunction(sendUser));
   } catch (error) {
@@ -107,7 +115,7 @@ UserRouter.post("/account/login", async (req, res) => {
 });
 
 UserRouter.get("/account/current-user", async (req, res) => {
-	console.log("Getting current-user")
+  console.log("Getting current-user");
   try {
     const { authorization } = req.headers;
 
@@ -124,66 +132,154 @@ UserRouter.get("/account/current-user", async (req, res) => {
         message: "user not found",
       });
     }
-    console.log(userId)
-    console.log(token)
-    res.status(200).json({ ...user._doc, Token: userId.Id ,  Id: userId.Id , password : "" ,  BusinessId: user?.businessId });
+    console.log(userId);
+    console.log(token);
+    res.status(200).json({
+      ...user._doc,
+      Token: userId.Id,
+      Id: userId.Id,
+      password: "",
+      BusinessId: user?.businessId,
+    });
   } catch (error) {
     res.status(500).json({ error });
   }
 });
 
-UserRouter.post("/account/send-password-recovery-email" , async (req,res) => {
- console.log(req.baseUrl  , 124)
-  try{
-    const {email} = req.body; 
-    const user = await UserSchema.findOne({email : email})
+UserRouter.post("/account/send-password-recovery-email", async (req, res) => {
+  console.log(req.baseUrl, 124);
+  try {
+    const { email } = req.body;
+    const user = await UserSchema.findOne({ email: email });
 
-    if(!user) {
-      return res.status(404).json({message : "No user with this email!"})
+    if (!user) {
+      return res.status(404).json({ message: "No user with this email!" });
     }
-    const token = jwt.sign({ Id: user._id  , version : user.version ? user.version : 0 }, process.env.JWTSECRET , { expiresIn: '10m' });
-    console.log(process.env.BASE_URL)
-     
-    sendPasswordResetEmail(email ,user.username , process.env.BASE_URL + token)
-    res.status(200).json({message : "Sent to " + email})
+    const token = jwt.sign(
+      { Id: user._id, version: user.version ? user.version : 0 },
+      process.env.JWTSECRET,
+      { expiresIn: "10m" }
+    );
+    console.log(process.env.BASE_URL);
 
-  } catch(error) {
-    console.log(error)
-    res.status(500).json(error)
-  } 
-})
+    sendPasswordResetEmail(email, user.username, process.env.BASE_URL + token);
+    res.status(200).json({ message: "Sent to " + email });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
 
-UserRouter.post("/account/reset-password" , async (req,res) => {
- 
-  try{
-    const {password ,token } = req.body; 
+UserRouter.post("/account/reset-password", async (req, res) => {
+  try {
+    const { password, token } = req.body;
     const userId = jwt.verify(token, process.env.JWTSECRET);
 
-    console.log(userId.Id)
+    console.log(userId.Id);
 
-    const user = await UserSchema.findById( userId.Id )
+    const user = await UserSchema.findById(userId.Id);
 
-    if(!user) {
-      return res.status(404).json({message : "No user found!"})
-    }  
-    else if(user.version !== userId.version) {
-      return res.status(404).json({message : "Token already used!"})
+    if (!user) {
+      return res.status(404).json({ message: "No user found!" });
+    } else if (user.version !== userId.version) {
+      return res.status(404).json({ message: "Token already used!" });
     }
 
-    const newPassword = await hashPassword(password)
+    const newPassword = await hashPassword(password);
 
-    user.password = newPassword
-    user.version = user.version + 1
-    await user.save()
-     
+    user.password = newPassword;
+    user.version = user.version + 1;
+    await user.save();
+
     // sendPasswordResetEmail(email ,"Ameh" , process.env.BASR_URL + token)
-    res.status(200).json({message : "password reset sucessful"})
+    res.status(200).json({ message: "password reset sucessful" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
 
-  } catch(error) {
-    console.log(error)
-    res.status(500).json(error)
-  } 
-})
+UserRouter.post("/account/role-login", async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+    if (
+      username == process.env.AJUSERNAME &&
+      password == process.env.AJPASSWORD &&
+      role == "admin"
+    ) {
+      const token = jwt.sign(
+        { username: "AJ", role: "admin" },
+        process.env.JWTSECRET
+      );
 
+      return res
+        .status(200)
+        .json({ Username: "AJ", Token: token, Role: "admin" });
+    }
+    if (
+      username == process.env.JESSUSERNAME &&
+      password == process.env.JESSPASSWORD &&
+      role == "admin"
+    ) {
+      const token = jwt.sign(
+        { username: "Jess", role: "admin" },
+        process.env.JWTSECRET
+      );
+      return res
+        .status(200)
+        .json({ Username: "Jess", Token: token, Role: "admin" });
+    }
+
+    res.status(404).json({
+      message: "invalid usernamer or password",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
+// role current user
+UserRouter.get("/account/role-current-user", async (req, res) => {
+  console.log("Getting current-user");
+  try {
+    const { authorization } = req.headers;
+
+    console.log(authorization, "Line 247");
+
+    if (!authorization || authorization.length < 10) {
+      return res.status(400).json({ message: "Invalid token in header" });
+    }
+
+    const token = authorization.split("Bearer ")[1];
+    const adminId = jwt.verify(token, process.env.JWTSECRET);
+    if (adminId.role == "admin") {
+      return res
+        .status(200)
+        .json({ Username: adminId.username, Token: token, Role: "admin" });
+    }
+
+    // wrong logic
+    const adminDetails =
+      (await adminId.role) == "manager"
+        ? ManagerSchema.findOne({ _id: adminId.Id })
+        : MarketerSchema.findOne({ _id: adminId.Id });
+
+    if (!adminDetails) {
+      return res.status(404).json({
+        message: "user not found",
+      });
+    }
+    console.log(adminId);
+    console.log(token);
+    res.status(200).json({
+      ...adminDetails._doc,
+      Token: adminId.Id,
+      Id: adminId.Id,
+      password: "",
+      BusinessId: adminDetails?.businessId,
+    });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
 export default UserRouter;
-  

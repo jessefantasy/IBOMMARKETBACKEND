@@ -13,8 +13,38 @@ PostsRoute.get("/post", async (req, res) => {
 
   console.log(pageNumber)
   try {
-    const posts = await PostModel.find({status : "active" }).skip( (pageNumber - 1) * 20 ).limit(20);
+    const posts = await PostModel.find({status : "active" }).sort({ updatedAt: -1 }).skip( (pageNumber - 1) * 20 ).limit(20);
     // const posts = await PostModel.find({ }).skip( (pageNumber - 1) * 20 ).limit(20);
+    // const posts = await PostModel.find({ })
+
+    let sendPosts = posts.map((advert) => {
+      // advert._id = advert._id.toString();
+      return {
+        ...advert._doc,
+        createdAt: advert.createdAt.toString(),
+        updatedAt: advert.updatedAt.toString(),
+        _id: advert._id.toString(),  
+        ownerId: advert.ownerId.toString(),
+        PropertyPhotos: advert.postImages,
+        Token: advert._id.toString(),
+        BusinessToken: advert.ownerId.toString(),
+        // postImages: "",
+        // others: "",
+      };
+    }); 
+    res.status(200).json(changes.arrayChangeFunctin(sendPosts));
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error });
+  }
+});
+PostsRoute.get("/post-admin", async (req, res) => {
+  const { pageNumber } = req.query
+
+  console.log(pageNumber)
+  try {
+    // const posts = await PostModel.find({status : "active" }).skip( (pageNumber - 1) * 20 ).limit(20);
+    const posts = await PostModel.find({ }).sort({ updatedAt: -1 }).skip( (pageNumber - 1) * 20 ).limit(20);
     // const posts = await PostModel.find({ })
 
     let sendPosts = posts.map((advert) => {
