@@ -74,3 +74,37 @@ export const sendRoleActvationMail = (email, username, link) => {
     }
   });
 };
+
+export const sendManagerWelcomeMail = (email, username, defaultPassword) => {
+  const mailOptions = {
+    from: "amehharrison2020@gmail.com",
+    to: email,
+    subject: "Ibommarket Account Activated ",
+    html: `
+    <div >
+      <p>Hi ${username},</p>
+
+ 
+      <p>Yout Ibommarket manager's account has been acticated and you can now procees to login</p>
+      <p></p>
+      
+      <p>Use ${email} as your email and ${defaultPassword} as your default passwor. This can be changed at any time  </p>
+      <p></p>
+
+
+      <p> You can proceed to <a href="${
+        process.env.ADMIN_BASE_URL + "login "
+      }"> from here </a>  </p> 
+  
+    </div>
+  `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent : " + info.response);
+    }
+  });
+};

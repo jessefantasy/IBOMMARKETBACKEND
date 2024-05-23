@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { signToken } from "../utils/jwt.js";
-import { sendRoleActvationMail } from "../utils/sendEmail.js";
+import {
+  sendManagerWelcomeMail,
+  sendRoleActvationMail,
+} from "../utils/sendEmail.js";
 import ManagerSchema from "../schema/manager.js";
 import jwt from "jsonwebtoken";
 
@@ -46,8 +49,9 @@ ManagerRouter.post("/admin-add-manager", async (req, res) => {
         },
       });
     }
-    const newRole = ManagerSchema({
+    const newRole = await ManagerSchema({
       ...roleDetails,
+      username: req.body.email,
       password: defaultPassword,
     });
 
@@ -67,7 +71,7 @@ ManagerRouter.post("/admin-add-manager", async (req, res) => {
     sendRoleActvationMail(
       role.email,
       role.username,
-      "activate-account?token=" + activationToken
+      "manager/activate-role?token=" + activationToken
     );
     res.status(200).json(role);
   } catch (error) {
@@ -208,7 +212,7 @@ ManagerRouter.post("/manager/activate", async (req, res) => {
       { _id: verifiedToken.Id },
       { status: "active" }
     );
-
+    sendManagerWelcomeMail(manager.email, manager.fullName, manager.password);
     return res.status(200).json({ manager });
   } catch (error) {
     return res.status(500).json({ error });
