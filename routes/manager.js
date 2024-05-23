@@ -70,7 +70,7 @@ ManagerRouter.post("/admin-add-manager", async (req, res) => {
     );
     sendRoleActvationMail(
       role.email,
-      role.username,
+      role.fullName,
       "manager/activate-role?token=" + activationToken
     );
     res.status(200).json(role);

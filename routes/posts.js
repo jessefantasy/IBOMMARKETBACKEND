@@ -5,15 +5,19 @@ import { promisify } from "util";
 import jwt from "jsonwebtoken";
 import cloud from "../utils/cloudinary.js";
 import PostModel from "../schema/posts.js";
+import PostSchema from "../schema/posts.js";
 
 const PostsRoute = Router();
 
 PostsRoute.get("/post", async (req, res) => {
-  const { pageNumber } = req.query
+  const { pageNumber } = req.query;
 
-  console.log(pageNumber)
+  console.log(pageNumber);
   try {
-    const posts = await PostModel.find({status : "active" }).sort({ updatedAt: -1 }).skip( (pageNumber - 1) * 20 ).limit(20);
+    const posts = await PostModel.find({ status: "active" })
+      .sort({ updatedAt: -1 })
+      .skip((pageNumber - 1) * 20)
+      .limit(20);
     // const posts = await PostModel.find({ }).skip( (pageNumber - 1) * 20 ).limit(20);
     // const posts = await PostModel.find({ })
 
@@ -23,7 +27,7 @@ PostsRoute.get("/post", async (req, res) => {
         ...advert._doc,
         createdAt: advert.createdAt.toString(),
         updatedAt: advert.updatedAt.toString(),
-        _id: advert._id.toString(),  
+        _id: advert._id.toString(),
         ownerId: advert.ownerId.toString(),
         PropertyPhotos: advert.postImages,
         Token: advert._id.toString(),
@@ -31,7 +35,7 @@ PostsRoute.get("/post", async (req, res) => {
         // postImages: "",
         // others: "",
       };
-    }); 
+    });
     res.status(200).json(changes.arrayChangeFunctin(sendPosts));
   } catch (error) {
     console.log(error);
@@ -39,12 +43,15 @@ PostsRoute.get("/post", async (req, res) => {
   }
 });
 PostsRoute.get("/post-admin", async (req, res) => {
-  const { pageNumber } = req.query
+  const { pageNumber } = req.query;
 
-  console.log(pageNumber)
+  console.log(pageNumber);
   try {
     // const posts = await PostModel.find({status : "active" }).skip( (pageNumber - 1) * 20 ).limit(20);
-    const posts = await PostModel.find({ }).sort({ updatedAt: -1 }).skip( (pageNumber - 1) * 20 ).limit(20);
+    const posts = await PostModel.find({})
+      .sort({ updatedAt: -1 })
+      .skip((pageNumber - 1) * 20)
+      .limit(20);
     // const posts = await PostModel.find({ })
 
     let sendPosts = posts.map((advert) => {
@@ -53,7 +60,7 @@ PostsRoute.get("/post-admin", async (req, res) => {
         ...advert._doc,
         createdAt: advert.createdAt.toString(),
         updatedAt: advert.updatedAt.toString(),
-        _id: advert._id.toString(),  
+        _id: advert._id.toString(),
         ownerId: advert.ownerId.toString(),
         PropertyPhotos: advert.postImages,
         Token: advert._id.toString(),
@@ -61,7 +68,7 @@ PostsRoute.get("/post-admin", async (req, res) => {
         // postImages: "",
         // others: "",
       };
-    }); 
+    });
     res.status(200).json(changes.arrayChangeFunctin(sendPosts));
   } catch (error) {
     console.log(error);
@@ -70,7 +77,7 @@ PostsRoute.get("/post-admin", async (req, res) => {
 });
 PostsRoute.get("/post/:_id", async (req, res) => {
   try {
-    const { _id } = req.params;  
+    const { _id } = req.params;
     const post = await PostModel.findById(_id);
     if (!post) {
       return res.status(404).json({ message: "This post does not exist" });
@@ -96,9 +103,8 @@ PostsRoute.post(
   "/post",
   upload.fields([{ name: "file" }]),
   async (req, res) => {
-
-          console.log(req.body , 65)
-      console.log(typeof req.body.phoneNumber , 66)
+    console.log(req.body, 65);
+    console.log(typeof req.body.phoneNumber, 66);
     try {
       const imageUrls = [];
 
@@ -124,13 +130,16 @@ PostsRoute.post(
           const { public_id, secure_url } = result;
           imageUrls.push({ public_id, url: secure_url });
         })
-      ); 
+      );
       const data = {
         ...req.body,
         ownerId: verifiedToken.Id,
         coverImageUrl: imageUrls[0].url,
         postImages: imageUrls,
-        phoneNumber : typeof req.body.phoneNumber == 'object' ? req.body.phoneNumber[0] : req.body.phoneNumber
+        phoneNumber:
+          typeof req.body.phoneNumber == "object"
+            ? req.body.phoneNumber[0]
+            : req.body.phoneNumber,
       };
       const saveData = new PostModel(data);
       const result = await saveData.save();
@@ -267,7 +276,7 @@ PostsRoute.delete("/post/:_id", async (req, res) => {
         message: "No post with this id found",
       });
     }
-    
+
     if (verifiedToken.Id !== editPost.ownerId.toString()) {
       return res.status(400).json({
         message: "You can only edit your own post",
@@ -295,11 +304,65 @@ PostsRoute.delete("/post/:_id", async (req, res) => {
 });
 
 // admin interraction
-PostsRoute.patch("/post/admin-edit/:_id", async (req, res) => {
+
+// admin and manager get
+PostsRoute.get("/admin-manager/get-post", async (req, res) => {
   try {
-   const {_id} = req.params
-     const editPost = await PostModel.findOne({ _id });
-   
+    const { authorization } = req.headers;
+    if (!authorization || authorization.length < 10) {
+      return res.status(400).json({
+        message: {
+          name: "JsonWebTokenError",
+          message: "invalid token",
+        },
+      });
+    }
+    const token = authorization.split("Bearer ")[1];
+    console.log(token);
+    const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+    console.log(verifiedToken.role == "admin");
+    if (!verifiedToken.role == "admin" || !verifiedToken.role == "manager") {
+      return res.status(400).json({
+        message: {
+          name: "Authorization Error",
+          message: "You are not an admin",
+        },
+      });
+    }
+    const posts = await PostSchema.find();
+
+    return res.status(200).json({ ...posts });
+  } catch (error) {}
+});
+
+// admin and manager edit
+PostsRoute.patch("/admin/admin-manager-edit-post/:_id", async (req, res) => {
+  try {
+    const { _id } = req.params;
+
+    const { authorization } = req.headers;
+    if (!authorization || authorization.length < 10) {
+      return res.status(400).json({
+        message: {
+          name: "JsonWebTokenError",
+          message: "invalid token",
+        },
+      });
+    }
+    const token = authorization.split("Bearer ")[1];
+    console.log(token);
+    const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+    console.log(verifiedToken.role == "admin");
+    if (!verifiedToken.role == "admin" || !verifiedToken.role == "manager") {
+      return res.status(400).json({
+        message: {
+          name: "Authorization Error",
+          message: "You are not an admin",
+        },
+      });
+    }
+    const editPost = await PostModel.findOne({ _id });
+
     if (!editPost) {
       return res.status(404).json({
         message: "No post with this id found",
@@ -313,4 +376,4 @@ PostsRoute.patch("/post/admin-edit/:_id", async (req, res) => {
     res.status(500).json({ message: error });
   }
 });
-export default PostsRoute; 
+export default PostsRoute;
