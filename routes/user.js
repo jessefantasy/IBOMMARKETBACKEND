@@ -162,7 +162,11 @@ UserRouter.post("/account/send-password-recovery-email", async (req, res) => {
     );
     console.log(process.env.BASE_URL);
 
-    sendPasswordResetEmail(email, user.username, process.env.BASE_URL + token);
+    sendPasswordResetEmail(
+      email,
+      user.username,
+      process.env.BASE_URL + "reset-password?token=" + token
+    );
     res.status(200).json({ message: "Sent to " + email });
   } catch (error) {
     console.log(error);
@@ -230,6 +234,31 @@ UserRouter.post("/account/role-login", async (req, res) => {
         .json({ Username: "Jess", Token: token, Role: "admin" });
     }
 
+    if (role == "manager") {
+      const manager = await ManagerSchema.findOne({
+        email: username,
+      });
+
+      if (!manager) {
+        return res.status(404).json({
+          message: "invalid usernamer or password",
+        });
+      }
+      console.log(manager.status);
+      if (manager.status != "active") {
+        return res.status(400).json({
+          message: "Account not activated, please contact admin",
+        });
+      }
+      const token = jwt.sign({ username, role }, process.env.JWTSECRET);
+      return res.status(200).json({
+        Username: manager.username,
+        Token: token,
+        Role: role,
+        ...manager._doc,
+      });
+    }
+
     res.status(404).json({
       message: "invalid usernamer or password",
     });
@@ -259,24 +288,30 @@ UserRouter.get("/account/role-current-user", async (req, res) => {
     }
 
     // wrong logic
-    const adminDetails =
-      (await adminId.role) == "manager"
-        ? ManagerSchema.findOne({ _id: adminId.Id })
-        : MarketerSchema.findOne({ _id: adminId.Id });
+    let adminDetails;
+    if (adminId.role == "manager") {
+      adminDetails = await ManagerSchema.findOne({
+        email: adminId.username,
+      });
+    } else {
+      adminDetails = await MarketerSchema.findOne({
+        email: adminId.username,
+      });
+    }
+    console.log(adminId);
+    console.log(adminDetails);
 
     if (!adminDetails) {
       return res.status(404).json({
         message: "user not found",
       });
     }
-    console.log(adminId);
     console.log(token);
-    res.status(200).json({
+    return res.status(200).json({
+      Username: adminDetails.username,
+      Token: token,
+      Role: adminId.role,
       ...adminDetails._doc,
-      Token: adminId.Id,
-      Id: adminId.Id,
-      password: "",
-      BusinessId: adminDetails?.businessId,
     });
   } catch (error) {
     res.status(500).json({ error });

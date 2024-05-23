@@ -6,7 +6,7 @@ const transporter = createTransport({
   secure: false,
   auth: {
     user: "amehharrison2020@gmail.com",
-    pass: process.env.MAILER,
+    pass: "xxpx zpui blmh lwgc",
   },
 });
 
@@ -43,5 +43,34 @@ export const sendPasswordResetEmail = (email, username, link) => {
 };
 
 export const sendRoleActvationMail = (email, username, link) => {
-  console.log("sending email");
+  const mailOptions = {
+    from: "amehharrison2020@gmail.com",
+    to: email,
+    subject: "Activate manager's account on Ibommarket",
+    html: `
+    <div >
+      <p>Hi ${username},</p>
+
+ 
+      <p>To activate your account  please click on the link:</p>
+
+      <p><a href="${
+        process.env.ADMIN_BASE_URL + link
+      }">Activate account here</a></p>
+
+      <p>If you are unable to click the link, please copy and paste it into your browser's address bar.</p>
+
+      <p>Please note that this link is valid for 30 mins  </p> 
+  
+    </div>
+  `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent : " + info.response);
+    }
+  });
 };

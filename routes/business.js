@@ -5,7 +5,7 @@ import cloud from "../utils/cloudinary.js";
 import { promisify } from "util";
 
 import BusinessSchema from "../schema/business.js";
-import UserSchema from "../schema/user.js"
+import UserSchema from "../schema/user.js";
 import PostSchema from "../schema/posts.js";
 import change from "../utils/change.js";
 
@@ -22,6 +22,76 @@ BusinessesRouter.get("/business", async (req, res) => {
 });
 
 BusinessesRouter.get("/business/:ownerId", async (req, res) => {
+  try {
+    const { authorization } = req.headers;
+    const { ownerId } = req.params;
+
+    // if (!authorization || authorization.length < 10) {
+    //   return res.status(400).json({
+    //     message: {
+    //       name: "JsonWebTokenError",
+    //       message: "invalid token",
+    //     },
+    //   });
+    // }
+    // const token = authorization.split("Bearer ")[1];
+
+    // const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+
+    // if (verifiedToken.Id !== ownerId) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "You can only view your business" });
+    // }
+    const business = await BusinessSchema.findOne({ ownerId });
+    if (!business) {
+      return res
+        .status(404)
+        .json({ message: "This user doses not have a business setup" });
+    }
+    const businessPosts = await PostSchema.find({ ownerId, status: "active" });
+
+    let sendPosts = businessPosts.map((advert) => {
+      // advert._id = advert._id.toString();
+      return {
+        ...advert._doc,
+        createdAt: advert.createdAt.toString(),
+        updatedAt: advert.updatedAt.toString(),
+        _id: advert._id.toString(),
+        ownerId: advert.ownerId.toString(),
+        PropertyPhotos: advert.postImages,
+        Token: advert._id.toString(),
+        BusinessToken: advert.ownerId.toString(),
+        // postImages: "",
+        // others: "",
+      };
+    });
+
+    console.log(business);
+
+    let sendBusiness = {
+      ...business._doc,
+      createdAt: business.createdAt?.toString(),
+      updatedAt: business.updatedAt?.toString(),
+      _id: business._id.toString(),
+      ownerId: business.ownerId.toString(),
+      Token: business.ownerId.toString(),
+      LogoUrl: business.logo,
+
+      // postImages: "",
+      // others: "",
+    };
+    const finalBusiness = { ...sendBusiness, posts: sendPosts };
+    // console.log(sendBusiness);
+    // res.status(200).json(f);
+    res.status(200).json(change.mainChangeFunction(finalBusiness));
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error });
+  }
+});
+
+BusinessesRouter.get("/business/my-business/:ownerId", async (req, res) => {
   try {
     const { authorization } = req.headers;
     const { ownerId } = req.params;
@@ -125,7 +195,10 @@ BusinessesRouter.post(
         ...imageUrl,
       });
       const result = await saveBusiness.save();
-      const businessOwner = await UserSchema.findOneAndUpdate({_id : verifiedToken.Id } , {businessId : verifiedToken.Id})
+      const businessOwner = await UserSchema.findOneAndUpdate(
+        { _id: verifiedToken.Id },
+        { businessId: verifiedToken.Id }
+      );
       res.status(200).json({ business: result });
     } catch (error) {
       console.log(error);
@@ -165,10 +238,9 @@ BusinessesRouter.patch("/business/:_id", async (req, res) => {
     // const result = await saveBusiness.save();
     // const update
 
-
     for (const key in req.body) {
       business[key] = req.body[key];
-      console.log(key , req.body[key])
+      console.log(key, req.body[key]);
     }
     await business.save();
     res.status(200).json({ business });
