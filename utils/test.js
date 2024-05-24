@@ -1,3 +1,5 @@
-const name = "HArrison";
+import * as argon2 from "argon2";
 
-export default name;
+const hash = argon2.hash("Harrison");
+
+console.log(hash);

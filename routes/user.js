@@ -13,13 +13,6 @@ const hashPassword = async (password) => {
   return result;
 };
 
-async function quickHash(pass) {
-  return await hashPassword(pass);
-}
-quickHash("Harrison").then((result) => {
-  console.log(result.split(",")[2]);
-});
-
 const transporter = createTransport({
   host: "smtp.gmail.com",
   port: 587,
@@ -62,8 +55,8 @@ const sendPasswordResetEmail = (email, username, link) => {
   });
 };
 
-const comparePassword = async (enteredPassword, savedPassword) => {
-  const isMatch = await argon2.verify(enteredPassword, savedPassword);
+const comparePassword = async (savedPassword, enteredPassword) => {
+  const isMatch = await argon2.verify(savedPassword, enteredPassword);
   return isMatch;
 };
 
@@ -78,7 +71,7 @@ UserRouter.post("/account/register", async (req, res) => {
     await result.save();
     res.status(200).json({ user: result });
   } catch (error) {
-    if (error.errorResponse.code == 11000) {
+    if (error.errorResponse?.code == 11000) {
       return res.status(400).json({ error });
     }
     res.status(500).json({ error });
@@ -93,7 +86,7 @@ UserRouter.post("/account/login", async (req, res) => {
       return res.status(404).json({ message: "Invalid username or password" });
     }
 
-    const passwordMatch = await comparePassword(password, user.password);
+    const passwordMatch = await comparePassword(user.password, password);
     if (!passwordMatch) {
       return res.status(404).json({ message: "Invalid username or password" });
     }
@@ -110,6 +103,7 @@ UserRouter.post("/account/login", async (req, res) => {
     };
     res.status(200).json(change.mainChangeFunction(sendUser));
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error });
   }
 });
