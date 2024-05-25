@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import cloud from "../utils/cloudinary.js";
 import PostModel from "../schema/posts.js";
 import PostSchema from "../schema/posts.js";
+import { findMatchingPropertyInObjects } from "../utils/addFoundInPropertyToSearch.js";
 
 const PostsRoute = Router();
 
@@ -42,6 +43,81 @@ PostsRoute.get("/post", async (req, res) => {
     res.status(500).json({ error });
   }
 });
+
+// search in homepage
+PostsRoute.get("/post/homepage/search", async (req, res) => {
+  const { pageNumber, SearchTerm: searchTerm } = req.query;
+
+  console.log(pageNumber);
+  try {
+    const posts = await PostModel.find({
+      status: "active",
+      $or: [
+        { title: { $regex: searchTerm, $options: "i" } },
+        { description: { $regex: searchTerm, $options: "i" } },
+      ],
+    }).limit(5);
+
+    let sendPosts = posts.map((advert) => {
+      // advert._id = advert._id.toString();
+      return {
+        ...advert._doc,
+        createdAt: advert.createdAt.toString(),
+        updatedAt: advert.updatedAt.toString(),
+        _id: advert._id.toString(),
+        ownerId: advert.ownerId.toString(),
+        PropertyPhotos: advert.postImages,
+        Token: advert._id.toString(),
+        BusinessToken: advert.ownerId.toString(),
+        // postImages: "",
+        // others: "",
+      };
+    });
+    sendPosts = findMatchingPropertyInObjects(sendPosts, searchTerm);
+    res.status(200).json(changes.arrayChangeFunctin(sendPosts));
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error });
+  }
+});
+
+// search in filter page
+PostsRoute.get("/post/filter/search", async (req, res) => {
+  const { pageNumber, searchTerm } = req.query;
+
+  console.log(pageNumber);
+  try {
+    const posts = await PostModel.find({
+      status: "active",
+      $or: [
+        { title: { $regex: searchTerm, $options: "i" } },
+        { description: { $regex: searchTerm, $options: "i" } },
+      ],
+    }).limit(50);
+
+    let sendPosts = posts.map((advert) => {
+      // advert._id = advert._id.toString();
+      return {
+        ...advert._doc,
+        createdAt: advert.createdAt.toString(),
+        updatedAt: advert.updatedAt.toString(),
+        _id: advert._id.toString(),
+        ownerId: advert.ownerId.toString(),
+        PropertyPhotos: advert.postImages,
+        Token: advert._id.toString(),
+        BusinessToken: advert.ownerId.toString(),
+        // postImages: "",
+        // others: "",
+      };
+    });
+    sendPosts = findMatchingPropertyInObjects(sendPosts, searchTerm);
+    res.status(200).json(changes.arrayChangeFunctin(sendPosts));
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error });
+  }
+});
+
 PostsRoute.get("/post-admin", async (req, res) => {
   const { pageNumber } = req.query;
 

@@ -11,6 +11,7 @@ import UserRouter from "./routes/user.js";
 import BusinessesRouter from "./routes/business.js";
 import RolesRouter from "./routes/roles.js";
 import ManagerRouter from "./routes/manager.js";
+import ManagerTasksRouter from "./routes/managerTasks.js";
 // import
 
 dotenv.config();
@@ -32,6 +33,7 @@ server.use("/", UserRouter);
 server.use("/", BusinessesRouter);
 server.use("/", RolesRouter);
 server.use("/", ManagerRouter);
+server.use("/", ManagerTasksRouter);
 server.get("/", (req, res) => {
   res.status(200).json({ message: "Done" });
 });

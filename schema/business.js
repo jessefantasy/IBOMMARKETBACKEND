@@ -44,6 +44,26 @@ const schema = new Schema(
       type: String,
       required: true,
     },
+    ibmId: {
+      type: String,
+      required: true,
+    },
+    activePosts: {
+      type: Number,
+      default: 0,
+    },
+    postsDetails: {
+      type: [],
+      required: true,
+      default: [
+        {
+          active: 0,
+          pending: 0,
+          rejected: 0,
+          closed: 0,
+        },
+      ],
+    },
   },
   { timestamps: true }
 );
@@ -51,3 +71,15 @@ const schema = new Schema(
 const BusinessSchema = mongoose.model("businesses", schema);
 
 export default BusinessSchema;
+
+const ibm = new Schema({
+  IDS: {
+    type: [String],
+    default: [],
+  },
+});
+
+export const IbommarketBusinessIDs = mongoose.model(
+  "ibm-business-id-arrays",
+  ibm
+);

@@ -4,10 +4,11 @@ import upload from "../utils/multer.js";
 import cloud from "../utils/cloudinary.js";
 import { promisify } from "util";
 
-import BusinessSchema from "../schema/business.js";
+import BusinessSchema, { IbommarketBusinessIDs } from "../schema/business.js";
 import UserSchema from "../schema/user.js";
 import PostSchema from "../schema/posts.js";
 import change from "../utils/change.js";
+import { createIbmId } from "../utils/createIbmId.js";
 
 const BusinessesRouter = Router();
 
@@ -77,13 +78,10 @@ BusinessesRouter.get("/business/:ownerId", async (req, res) => {
       ownerId: business.ownerId.toString(),
       Token: business.ownerId.toString(),
       LogoUrl: business.logo,
-
-      // postImages: "",
-      // others: "",
+      BusinessId: business.ibmId,
     };
+    console.log(business);
     const finalBusiness = { ...sendBusiness, posts: sendPosts };
-    // console.log(sendBusiness);
-    // res.status(200).json(f);
     res.status(200).json(change.mainChangeFunction(finalBusiness));
   } catch (error) {
     console.log(error);
@@ -96,23 +94,23 @@ BusinessesRouter.get("/business/my-business/:ownerId", async (req, res) => {
     const { authorization } = req.headers;
     const { ownerId } = req.params;
 
-    // if (!authorization || authorization.length < 10) {
-    //   return res.status(400).json({
-    //     message: {
-    //       name: "JsonWebTokenError",
-    //       message: "invalid token",
-    //     },
-    //   });
-    // }
-    // const token = authorization.split("Bearer ")[1];
+    if (!authorization || authorization.length < 10) {
+      return res.status(400).json({
+        message: {
+          name: "JsonWebTokenError",
+          message: "invalid token",
+        },
+      });
+    }
+    const token = authorization.split("Bearer ")[1];
 
-    // const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+    const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
 
-    // if (verifiedToken.Id !== ownerId) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "You can only view your business" });
-    // }
+    if (verifiedToken.Id !== ownerId) {
+      return res
+        .status(400)
+        .json({ message: "You can only view your business" });
+    }
     const business = await BusinessSchema.findOne({ ownerId });
     if (!business) {
       return res
@@ -188,6 +186,12 @@ BusinessesRouter.post(
           imageUrl = { logo: result.secure_url, logoId: result.public_id };
         })
       );
+      const prevBusinessIds = await IbommarketBusinessIDs.find({});
+
+      const newBusinessId = createIbmId(prevBusinessIds.IDS);
+
+      prevBusinessIds.IDS.push(newBusinessId);
+      await prevBusinessIds.save();
 
       const saveBusiness = new BusinessSchema({
         ...req.body,
