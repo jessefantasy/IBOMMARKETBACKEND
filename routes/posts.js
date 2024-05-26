@@ -7,6 +7,7 @@ import cloud from "../utils/cloudinary.js";
 import PostModel from "../schema/posts.js";
 import PostSchema from "../schema/posts.js";
 import { findMatchingPropertyInObjects } from "../utils/addFoundInPropertyToSearch.js";
+import { convertToMongooseQuery } from "../utils/formartQueryParams.js";
 
 const PostsRoute = Router();
 
@@ -83,16 +84,21 @@ PostsRoute.get("/post/homepage/search", async (req, res) => {
 
 // search in filter page
 PostsRoute.get("/post/filter/search", async (req, res) => {
-  const { pageNumber, searchTerm } = req.query;
+  const { searchTerm: title } = req.query;
 
-  console.log(pageNumber);
+  const { searchTerm, ...formQueryParams } = req.query;
+  const mainQueryObject = convertToMongooseQuery(formQueryParams);
+
+  console.log(mainQueryObject, 92);
+
   try {
     const posts = await PostModel.find({
       status: "active",
       $or: [
-        { title: { $regex: searchTerm, $options: "i" } },
-        { description: { $regex: searchTerm, $options: "i" } },
+        { title: { $regex: title, $options: "i" } },
+        { description: { $regex: title, $options: "i" } },
       ],
+      ...mainQueryObject,
     }).limit(50);
 
     let sendPosts = posts.map((advert) => {
