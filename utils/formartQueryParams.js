@@ -15,7 +15,7 @@ export function convertToMongooseQuery(queryParams) {
       query[key] = { $in: value.map(parseValue) };
     }
 
-    if (typeof value === "string") {
+    if (typeof value === "string") { 
       // Check for operators (e.g., key__gt=10)
       const parts = key.split("__");
       if (parts.length === 2) {
