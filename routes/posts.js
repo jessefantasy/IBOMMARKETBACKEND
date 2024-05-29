@@ -8,6 +8,8 @@ import PostModel from "../schema/posts.js";
 import PostSchema from "../schema/posts.js";
 import { findMatchingPropertyInObjects } from "../utils/addFoundInPropertyToSearch.js";
 import { convertToMongooseQuery } from "../utils/formartQueryParams.js";
+import CategoriesSchema from "../schema/categories.js";
+import BusinessSchema from "../schema/business.js";
 
 const PostsRoute = Router();
 
@@ -56,6 +58,8 @@ PostsRoute.get("/post/homepage/search", async (req, res) => {
       $or: [
         { title: { $regex: searchTerm, $options: "i" } },
         { description: { $regex: searchTerm, $options: "i" } },
+        { categoryName: { $regex: searchTerm, $options: "i" } },
+        { subcategoryName: { $regex: searchTerm, $options: "i" } },
       ],
     }).limit(5);
 
@@ -97,6 +101,8 @@ PostsRoute.get("/post/filter/search", async (req, res) => {
       $or: [
         { title: { $regex: title, $options: "i" } },
         { description: { $regex: title, $options: "i" } },
+        { categoryName: { $regex: title, $options: "i" } },
+        { subcategoryName: { $regex: title, $options: "i" } },
       ],
       ...mainQueryObject,
     }).limit(50);
@@ -203,6 +209,37 @@ PostsRoute.post(
       const token = authorization.split("Bearer ")[1];
 
       const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+      // confirm category  and subcategory
+      const belongsHere = await CategoriesSchema.findOne({
+        Id: req.body.categoryId,
+      });
+
+      if (!belongsHere) {
+        return res
+          .status(400)
+          .json({ message: "This category does not exist" });
+      }
+      const categoryAndSubDetails = {
+        categoryName: "",
+        subcategoryName: "",
+      };
+      categoryAndSubDetails.categoryName = belongsHere.Name;
+      let subExits = 0;
+      belongsHere.Subcategories.forEach((one) => {
+        console.log(one.Id, one.Name, req.body.subcategoryId);
+        if (one.Id == Number(req.body.subcategoryId)) {
+          subExits++;
+          categoryAndSubDetails.subcategoryName = one.Name;
+        }
+      });
+      console.log(categoryAndSubDetails, subExits);
+      if (subExits == 0) {
+        return res
+          .status(400)
+          .json({ message: "This sub-category does not exist" });
+      }
+
+      console.log("236");
 
       // Use Promise.all to wait for all uploads to complete
       await Promise.all(
@@ -213,11 +250,13 @@ PostsRoute.post(
           imageUrls.push({ public_id, url: secure_url });
         })
       );
+
       const data = {
         ...req.body,
         ownerId: verifiedToken.Id,
         coverImageUrl: imageUrls[0].url,
         postImages: imageUrls,
+        ...categoryAndSubDetails,
         phoneNumber:
           typeof req.body.phoneNumber == "object"
             ? req.body.phoneNumber[0]
@@ -452,6 +491,16 @@ PostsRoute.patch("/admin/admin-manager-edit-post/:_id", async (req, res) => {
     }
 
     const mainEdit = await PostModel.findOneAndUpdate({ _id }, req.body);
+    if (req.body.status == "active") {
+      const business = await BusinessSchema.findOne({
+        ownerId: mainEdit.ownerId,
+      });
+      await BusinessSchema.findOneAndUpdate(
+        { ownerId: mainEdit.ownerId },
+        { activePosts: business.activePosts + 1 }
+      );
+    }
+    // if(req.body)
     return res.status(200).json(mainEdit);
   } catch (error) {
     console.error(error);

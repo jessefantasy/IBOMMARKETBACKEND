@@ -24,6 +24,24 @@ export const findMatchingPropertyInObjects = (objects, searchString) => {
     ) {
       foundProperty = "description";
     }
+    // Check the 'categoryName' property if 'description' was not found
+    if (
+      !foundProperty &&
+      obj.hasOwnProperty("categoryName") &&
+      typeof obj["categoryName"] === "string" &&
+      obj["categoryName"].toLowerCase().includes(searchLower)
+    ) {
+      foundProperty = "Category";
+    }
+    // Check the 'subcategoryName' property if 'categoryName' was not found
+    if (
+      !foundProperty &&
+      obj.hasOwnProperty("subcategoryName") &&
+      typeof obj["subcategoryName"] === "string" &&
+      obj["subcategoryName"].toLowerCase().includes(searchLower)
+    ) {
+      foundProperty = "Subcategory";
+    }
 
     // Add the foundIn property to the object
     return {

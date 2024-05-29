@@ -57,6 +57,6 @@ const schemas = new Schema(
   { timestamps: true }
 );
 
-const CategoriesSchema = mongoose.model("ibm-categories", schemas);
+const CategoriesSchema = mongoose.model("ibm-category", schemas);
 
 export default CategoriesSchema;

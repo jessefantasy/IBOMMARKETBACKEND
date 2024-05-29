@@ -9,7 +9,7 @@ const CategoriesRouter = Router();
 CategoriesRouter.get("/categories", async (req, res) => {
   try {
     const categories = await CategoriesSchema.find({});
-    res.status(200).json({ categories });
+    res.status(200).json(categories);
   } catch (error) {
     res.status(500).json({ message: "internal server server" });
   }
@@ -20,13 +20,13 @@ CategoriesRouter.get("/categories/:Id", async (req, res) => {
   try {
     const { Id } = req.params;
     const category = await CategoriesSchema.findOne({ Id });
-    console.log(category);
     if (!category) {
       return res
         .status(404)
         .json({ message: "No category with this Id forund" });
     }
-    res.status(200).json({ category });
+
+    res.status(200).json(category);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "internal server server" });
@@ -64,6 +64,8 @@ CategoriesRouter.post(
         Id: prevId,
         ...imageUrl,
       });
+
+      console.log(newCategory, 68);
       const result = await newCategory.save();
       res.status(200).json({ result });
     } catch (error) {
@@ -73,6 +75,7 @@ CategoriesRouter.post(
   }
 );
 
+// delete single category
 CategoriesRouter.delete("/categories/:Id", async (req, res) => {
   const { Id } = req.params;
   try {
@@ -100,6 +103,8 @@ CategoriesRouter.delete("/categories/:Id", async (req, res) => {
     res.status(500).json({ message: "internal server server", error });
   }
 });
+
+// patch category without image
 CategoriesRouter.patch("/categories/:Id", async (req, res) => {
   try {
     const { Id } = req.params;
@@ -116,6 +121,8 @@ CategoriesRouter.patch("/categories/:Id", async (req, res) => {
     res.status(500).json({ message: "internal server server", ...error });
   }
 });
+
+// patch single category with image
 CategoriesRouter.patch(
   "/categories/:Id/image",
   upload.fields([{ name: "file" }]),
@@ -157,6 +164,7 @@ CategoriesRouter.patch(
   }
 );
 
+// get single sub category
 CategoriesRouter.get("/categories/:CatId/:Id", async (req, res) => {
   try {
     const { CatId, Id } = req.params;
@@ -184,6 +192,7 @@ CategoriesRouter.get("/categories/:CatId/:Id", async (req, res) => {
   }
 });
 
+// add sub category
 CategoriesRouter.post(
   "/categories/:CatId",
   upload.fields([{ name: "file" }]),
@@ -233,6 +242,7 @@ CategoriesRouter.post(
   }
 );
 
+// delete sub category without
 CategoriesRouter.delete("/categories/:CatId/:Id", async (req, res) => {
   try {
     const { CatId, Id } = req.params;
@@ -265,6 +275,7 @@ CategoriesRouter.delete("/categories/:CatId/:Id", async (req, res) => {
   }
 });
 
+// patch sub category without images
 CategoriesRouter.patch("/categories/:CatId/:Id", async (req, res) => {
   try {
     const { CatId, Id } = req.params;
@@ -305,7 +316,7 @@ CategoriesRouter.patch("/categories/:CatId/:Id", async (req, res) => {
     res.status(500).json({ message: "internal server server", error });
   }
 });
-// edit with image
+// patch sub category with image
 CategoriesRouter.patch(
   "/categories/:CatId/:Id/image",
   upload.fields([{ name: "file" }]),

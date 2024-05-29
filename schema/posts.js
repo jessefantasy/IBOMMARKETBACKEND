@@ -63,13 +63,26 @@ const schema = new Schema(
       type: String,
       required: true,
     },
-    status : {
-      type : String,
-      default  : "pending" //active,reviewing,rejected,closed
+    status: {
+      type: String,
+      default: "pending", //active,reviewing,rejected,closed
     },
-    postRejectReasons : { 
-    	type : [String],
-    	default : []
+    postRejectReasons: {
+      type: [String],
+      default: [],
+    },
+    categoryName: {
+      type: String,
+      required: true,
+    },
+    subcategoryName: {
+      type: String,
+      required: true,
+    },
+    activeAdvertsCount: {
+      type: Number,
+      required: true,
+      default: 0,
     },
     others: {},
   },
