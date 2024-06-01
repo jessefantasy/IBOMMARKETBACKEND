@@ -187,6 +187,37 @@ PostsRoute.get("/post/:_id", async (req, res) => {
     res.status(500).json({ error });
   }
 });
+
+//
+PostsRoute.get(
+  "/post/relatedproperties/:_id/:subcategoryId",
+  async (req, res) => {
+    try {
+      const { _id, subcategoryId } = req.params;
+      const posts = await PostModel.find({ subcategoryId });
+      console.log(posts, 198);
+      let sendPosts = posts.map((post) => {
+        return {
+          ...post._doc,
+          createdAt: post.createdAt?.toString(),
+          updatedAt: post.updatedAt?.toString(),
+          _id: post._id?.toString(),
+          ownerId: post.ownerId?.toString(),
+          PropertyPhotos: post.postImages,
+          Token: post._id?.toString(),
+          BusinessToken: post.ownerId?.toString(),
+        };
+      });
+
+      res.status(200).json(changes.mainChangeFunction(sendPosts));
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error });
+    }
+  }
+);
+
+//
 PostsRoute.post(
   "/post",
   upload.fields([{ name: "file" }]),

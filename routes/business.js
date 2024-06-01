@@ -50,8 +50,8 @@ BusinessesRouter.get("/business/:ownerId", async (req, res) => {
         .status(404)
         .json({ message: "This user doses not have a business setup" });
     }
-    const businessPosts = await PostSchema.find({ ownerId, status: "active" });
-
+    const businessPosts = await PostSchema.find({ ownerId, status: "active" }).sort({ updatedAt: -1 })
+ 
     let sendPosts = businessPosts.map((advert) => {
       // advert._id = advert._id.toString();
       return {
