@@ -50,8 +50,11 @@ BusinessesRouter.get("/business/:ownerId", async (req, res) => {
         .status(404)
         .json({ message: "This user doses not have a business setup" });
     }
-    const businessPosts = await PostSchema.find({ ownerId, status: "active" }).sort({ updatedAt: -1 })
- 
+    const businessPosts = await PostSchema.find({
+      ownerId,
+      status: "active",
+    }).sort({ updatedAt: -1 });
+
     let sendPosts = businessPosts.map((advert) => {
       // advert._id = advert._id.toString();
       return {
@@ -186,17 +189,17 @@ BusinessesRouter.post(
           imageUrl = { logo: result.secure_url, logoId: result.public_id };
         })
       );
-      const prevBusinessIds = await IbommarketBusinessIDs.find({});
-
+      const prevBusinessIds = await IbommarketBusinessIDs.findOne({});
+      console.log(prevBusinessIds.IDS, 190);
       const newBusinessId = createIbmId(prevBusinessIds.IDS);
 
       prevBusinessIds.IDS.push(newBusinessId);
       await prevBusinessIds.save();
-
       const saveBusiness = new BusinessSchema({
         ...req.body,
         ownerId: verifiedToken.Id,
         ...imageUrl,
+        ibmId: newBusinessId,
       });
       const result = await saveBusiness.save();
       const businessOwner = await UserSchema.findOneAndUpdate(
@@ -205,7 +208,17 @@ BusinessesRouter.post(
       );
       res.status(200).json({ business: result });
     } catch (error) {
-      console.log(error);
+      console.log(error.code);
+      if (error?.code == 11000) {
+        let reason = "";
+        for (let key in error.keyValue) {
+          reason = error.keyValue[key];
+        }
+        res.statusMessage = `${reason} is already user by another Business`;
+        return res
+          .status(400)
+          .json({ message: `${reason} is already user by another Business` });
+      }
       res.status(500).json({ message: error });
     }
   }
@@ -249,7 +262,19 @@ BusinessesRouter.patch("/business/:_id", async (req, res) => {
     await business.save();
     res.status(200).json({ business });
   } catch (error) {
-    console.log(error);
+    console.log(error.code);
+    if (error?.code == 11000) {
+      let reason = "";
+      for (let key in error.keyValue) {
+        reason = error.keyValue[key];
+      }
+      console.log(reason);
+      res.statusMessage = `${reason} is already user by another Business`;
+      return res
+        .status(400)
+        .json({ message: `${reason} is already user by another Business` });
+    }
+
     res.status(500).json({ message: error });
   }
 });
@@ -308,6 +333,16 @@ BusinessesRouter.patch(
       console.log("hi");
     } catch (error) {
       console.log(error);
+      if (error?.code == 11000) {
+        let reason = "";
+        for (let key in error.keyValue) {
+          reason = error.keyValue[key];
+        }
+        res.statusMessage = `${reason} is already user by another Business`;
+        return res
+          .status(400)
+          .json({ message: `${reason} is already user by another Business` });
+      }
       res.status(500).json({ message: error });
     }
   }
