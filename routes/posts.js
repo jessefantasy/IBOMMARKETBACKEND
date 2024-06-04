@@ -86,6 +86,62 @@ PostsRoute.get("/post/homepage/search", async (req, res) => {
   }
 });
 
+// get rejected post
+PostsRoute.get("/post-rejected/:_id", async (req, res) => {
+  const { _id } = req.params;
+  const { authorization } = req.headers;
+
+
+   try {
+
+
+    if (!authorization || authorization.length < 10) {
+      return res.status(400).json({
+        message: {
+          name: "JsonWebTokenError",
+          message: "invalid token",
+        },
+      });
+    }
+    const token = authorization.split("Bearer ")[1];
+
+    const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+    const rejectedPost = await PostModel.findOne({ _id , status : "rejected" });
+    if (!rejectedPost) {
+      return res.status(404).json({
+        message: "No post with this id found",
+      });
+    }
+
+    if (verifiedToken.Id !== rejectedPost.ownerId.toString()) {
+      return res.status(400).json({
+        message: "You can only edit your own post",
+      });
+    }
+
+      console.log(rejectedPost , 122)
+    let sendPost  = {
+        ...rejectedPost._doc,
+        createdAt: rejectedPost.createdAt.toString(), 
+        updatedAt: rejectedPost.updatedAt.toString(),
+        _id: rejectedPost._id.toString(),
+        ownerId: rejectedPost.ownerId.toString(),
+        PropertyPhotos: rejectedPost.postImages,
+        Token: rejectedPost._id.toString(),
+        BusinessToken: rejectedPost.ownerId.toString(),
+        // postImages: "",
+        // others: "",
+      };
+      console.log(sendPost, 135)
+     res.status(200).json(changes.mainChangeFunction(sendPost));
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error });
+  }
+});
+
+
+
 // search in filter page
 PostsRoute.get("/post/filter/search", async (req, res) => {
   const { searchTerm: title } = req.query;
@@ -304,6 +360,7 @@ PostsRoute.post(
   }
 );
 
+// patch without image
 PostsRoute.patch("/post/:_id", async (req, res) => {
   try {
     const { _id } = req.params;
@@ -332,13 +389,15 @@ PostsRoute.patch("/post/:_id", async (req, res) => {
         message: "You can only edit your own post",
       });
     }
-    const mainEdit = await PostModel.findOneAndUpdate({ _id }, req.body);
+    const mainEdit = await PostModel.findOneAndUpdate({ _id }, {...req.body , status : "pending"} );
     return res.status(200).json(mainEdit);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error });
   }
 });
+
+
 PostsRoute.patch(
   "/post/:_id/image",
   upload.fields([{ name: "file" }]),

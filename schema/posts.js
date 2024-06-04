@@ -68,7 +68,7 @@ const schema = new Schema(
       default: "pending", //active,reviewing,rejected,closed
     },
     postRejectReasons: {
-      type: [String],
+      type: [],
       default: [],
     },
     categoryName: {
