@@ -397,7 +397,7 @@ PostsRoute.patch("/post/:_id", async (req, res) => {
   }
 });
 
-
+// edit post with image
 PostsRoute.patch(
   "/post/:_id/image",
   upload.fields([{ name: "file" }]),
@@ -443,6 +443,7 @@ PostsRoute.patch(
         ...req.body,
         coverImageUrl: imageUrls[0].url,
         postImages: imageUrls,
+        status : "pending"
       };
 
       const saveNewPost = await PostModel.findOneAndUpdate({ _id }, newData);
@@ -465,6 +466,8 @@ PostsRoute.patch(
     }
   }
 );
+
+
 PostsRoute.delete("/post/:_id", async (req, res) => {
   try {
     const { _id } = req.params;
