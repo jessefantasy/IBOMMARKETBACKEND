@@ -3,6 +3,8 @@ import CategoriesSchema from "../schema/categories.js";
 import cloud from "../utils/cloudinary.js";
 import upload from "../utils/multer.js";
 import { promisify } from "util";
+import PostSchema from "../schema/posts.js";
+import axios from "axios";
 
 const CategoriesRouter = Router();
 
@@ -374,6 +376,52 @@ CategoriesRouter.patch(
             .json({ message: "Sub category edited", mainCategory });
         });
       }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "internal server server", error });
+    }
+  }
+);
+
+// get sub category ads count
+CategoriesRouter.get(
+  "/categories/subcategories/get-count/:Id",
+  async (req, res) => {
+    const { Id } = req.params;
+    console.log(Id, 390);
+    // parseInt()
+    try {
+      const result = await CategoriesSchema.findOne({ Id: parseInt(Id) });
+      console.log(result);
+      if (!result) {
+        return res
+          .status(404)
+          .json({ message: "Category with this Id not found" });
+      }
+      let results = [];
+      let queries = [];
+      result.Subcategories.forEach((subCategory) => {
+        queries.push(
+          PostSchema.find({
+            categoryId: parseInt(Id),
+            subcategoryId: subCategory.Id,
+          })
+        );
+      });
+      let axiosResponse = await axios.all(queries);
+      // console.log(axiosResponse);
+      axiosResponse.forEach((one, index) => {
+        console.log(one);
+        console.log("one sifb sfu vhsfouvh svusfh vsf");
+        results.push({
+          count: one.length,
+          Id: result.Subcategories[index].Id,
+          Id: result.Subcategories[index].Name,
+          SubCategories: result.Subcategories,
+        });
+        // console.log(one.data.length);
+      });
+      res.status(200).json( results );
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "internal server server", error });
