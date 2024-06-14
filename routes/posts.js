@@ -91,10 +91,7 @@ PostsRoute.get("/post-rejected/:_id", async (req, res) => {
   const { _id } = req.params;
   const { authorization } = req.headers;
 
-
-   try {
-
-
+  try {
     if (!authorization || authorization.length < 10) {
       return res.status(400).json({
         message: {
@@ -106,7 +103,7 @@ PostsRoute.get("/post-rejected/:_id", async (req, res) => {
     const token = authorization.split("Bearer ")[1];
 
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    const rejectedPost = await PostModel.findOne({ _id , status : "rejected" });
+    const rejectedPost = await PostModel.findOne({ _id, status: "rejected" });
     if (!rejectedPost) {
       return res.status(404).json({
         message: "No post with this id found",
@@ -119,28 +116,26 @@ PostsRoute.get("/post-rejected/:_id", async (req, res) => {
       });
     }
 
-      console.log(rejectedPost , 122)
-    let sendPost  = {
-        ...rejectedPost._doc,
-        createdAt: rejectedPost.createdAt.toString(), 
-        updatedAt: rejectedPost.updatedAt.toString(),
-        _id: rejectedPost._id.toString(),
-        ownerId: rejectedPost.ownerId.toString(),
-        PropertyPhotos: rejectedPost.postImages,
-        Token: rejectedPost._id.toString(),
-        BusinessToken: rejectedPost.ownerId.toString(),
-        // postImages: "",
-        // others: "",
-      };
-      console.log(sendPost, 135)
-     res.status(200).json(changes.mainChangeFunction(sendPost));
+    console.log(rejectedPost, 122);
+    let sendPost = {
+      ...rejectedPost._doc,
+      createdAt: rejectedPost.createdAt.toString(),
+      updatedAt: rejectedPost.updatedAt.toString(),
+      _id: rejectedPost._id.toString(),
+      ownerId: rejectedPost.ownerId.toString(),
+      PropertyPhotos: rejectedPost.postImages,
+      Token: rejectedPost._id.toString(),
+      BusinessToken: rejectedPost.ownerId.toString(),
+      // postImages: "",
+      // others: "",
+    };
+    console.log(sendPost, 135);
+    res.status(200).json(changes.mainChangeFunction(sendPost));
   } catch (error) {
     console.log(error);
     res.status(500).json({ error });
   }
 });
-
-
 
 // search in filter page
 PostsRoute.get("/post/filter/search", async (req, res) => {
@@ -278,8 +273,6 @@ PostsRoute.post(
   "/post",
   upload.fields([{ name: "file" }]),
   async (req, res) => {
-    console.log(req.body, 65);
-    console.log(typeof req.body.phoneNumber, 66);
     try {
       const imageUrls = [];
 
@@ -326,20 +319,25 @@ PostsRoute.post(
           .json({ message: "This sub-category does not exist" });
       }
 
-      console.log("236");
-
       // Use Promise.all to wait for all uploads to complete
-      await Promise.all(
-        req.files.file.map(async (image) => {
-          const uploadPromise = promisify(cloud.uploader.upload);
-          const result = await uploadPromise(image.path);
-          const { public_id, secure_url } = result;
-          imageUrls.push({ public_id, url: secure_url });
-        })
-      );
+      // await Promise.all(
+      //   req.files.file.map(async (image) => {
+      //     const uploadPromise = promisify(cloud.uploader.upload);
+      //     const result = await uploadPromise(image.path);
+      //     const { public_id, secure_url } = result;
+      //     imageUrls.push({ public_id, url: secure_url });
+      //   })
+      // );
+
+      imageUrls.push({
+        public_id: "givjgyxe8pp0dgccypfp",
+        url: "https://res.cloudinary.com/dggvnotet/image/upload/v1718383131/givjgyxe8pp0dgccypfp.jpg",
+      });
+
+      const { others, ...withoutOthers } = req.body;
 
       const data = {
-        ...req.body,
+        ...withoutOthers,
         ownerId: verifiedToken.Id,
         coverImageUrl: imageUrls[0].url,
         postImages: imageUrls,
@@ -348,6 +346,7 @@ PostsRoute.post(
           typeof req.body.phoneNumber == "object"
             ? req.body.phoneNumber[0]
             : req.body.phoneNumber,
+        others: JSON.parse(req.body.others),
       };
       const saveData = new PostModel(data);
       const result = await saveData.save();
@@ -389,7 +388,10 @@ PostsRoute.patch("/post/:_id", async (req, res) => {
         message: "You can only edit your own post",
       });
     }
-    const mainEdit = await PostModel.findOneAndUpdate({ _id }, {...req.body , status : "pending"} );
+    const mainEdit = await PostModel.findOneAndUpdate(
+      { _id },
+      { ...req.body, status: "pending" }
+    );
     return res.status(200).json(mainEdit);
   } catch (error) {
     console.error(error);
@@ -443,7 +445,7 @@ PostsRoute.patch(
         ...req.body,
         coverImageUrl: imageUrls[0].url,
         postImages: imageUrls,
-        status : "pending"
+        status: "pending",
       };
 
       const saveNewPost = await PostModel.findOneAndUpdate({ _id }, newData);
@@ -466,7 +468,6 @@ PostsRoute.patch(
     }
   }
 );
-
 
 PostsRoute.delete("/post/:_id", async (req, res) => {
   try {
