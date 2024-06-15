@@ -320,19 +320,19 @@ PostsRoute.post(
       }
 
       // Use Promise.all to wait for all uploads to complete
-      // await Promise.all(
-      //   req.files.file.map(async (image) => {
-      //     const uploadPromise = promisify(cloud.uploader.upload);
-      //     const result = await uploadPromise(image.path);
-      //     const { public_id, secure_url } = result;
-      //     imageUrls.push({ public_id, url: secure_url });
-      //   })
-      // );
+      await Promise.all(
+        req.files.file.map(async (image) => {
+          const uploadPromise = promisify(cloud.uploader.upload);
+          const result = await uploadPromise(image.path);
+          const { public_id, secure_url } = result;
+          imageUrls.push({ public_id, url: secure_url });
+        })
+      );
 
-      imageUrls.push({
-        public_id: "givjgyxe8pp0dgccypfp",
-        url: "https://res.cloudinary.com/dggvnotet/image/upload/v1718383131/givjgyxe8pp0dgccypfp.jpg",
-      });
+      // imageUrls.push({
+      //   public_id: "givjgyxe8pp0dgccypfp",
+      //   url: "https://res.cloudinary.com/dggvnotet/image/upload/v1718383131/givjgyxe8pp0dgccypfp.jpg",
+      // });
 
       const { others, ...withoutOthers } = req.body;
 
