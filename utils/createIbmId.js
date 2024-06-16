@@ -4,10 +4,9 @@ export const createIbmId = (arrays) => {
   for (let index = 0; index < 7; index++) {
     final = final + numbers[Math.floor(Math.random() * 9)];
   }
-  final = "IBM-" + final;
 
-  if (arrays.includes(final)) {
+  if (arrays.includes(Number(final))) {
     return createIbmId(arrays);
   }
-  return final;
+  return Number(final);
 };

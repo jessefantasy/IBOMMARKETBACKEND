@@ -45,7 +45,7 @@ const schema = new Schema(
       required: true,
     },
     ibmId: {
-      type: String,
+      type: Number,
       required: true,
     },
     activePosts: {
@@ -74,7 +74,7 @@ export default BusinessSchema;
 
 const ibm = new Schema({
   IDS: {
-    type: [String],
+    type: [Number],
     default: [],
   },
 });
