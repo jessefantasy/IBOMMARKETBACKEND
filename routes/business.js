@@ -107,80 +107,35 @@ BusinessesRouter.get("/business/:ownerId", async (req, res) => {
     res.status(500).json({ message: error });
   }
 });
-// get business by   ibm-id
-// BusinessesRouter.get("/business-ibmid/:ownerId", async (req, res) => {
-//   try {
-//     const { authorization } = req.headers;
-//     const { ownerId } = req.params;
 
-//     // if (!authorization || authorization.length < 10) {
-//     //   return res.status(400).json({
-//     //     message: {
-//     //       name: "JsonWebTokenError",
-//     //       message: "invalid token",
-//     //     },
-//     //   });
-//     // }
-//     // const token = authorization.split("Bearer ")[1];
+// get business by title
+BusinessesRouter.get("/business-search", async (req, res) => {
+  try {
+    const { searchTerm } = req.query;
 
-//     // const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+    const businesses = await BusinessSchema.find({
+      businessName: { $regex: searchTerm, $options: "i" },
+    });
 
-//     // if (verifiedToken.Id !== ownerId) {
-//     //   return res
-//     //     .status(400)
-//     //     .json({ message: "You can only view your business" });
-//     // }
+    let sendBusinesses = businesses.map((business) => {
+      return {
+        ...business._doc,
+        createdAt: business.createdAt?.toString(),
+        updatedAt: business.updatedAt?.toString(),
+        _id: business._id.toString(),
+        ownerId: business.ownerId.toString(),
+        Token: business.ownerId.toString(),
+        LogoUrl: business.logo,
+        BusinessId: business.ibmId,
+      };
+    });
 
-//     const business = await BusinessSchema.findOne({
-//       ibmId: 7895971,
-//     });
-
-//     if (!business) {
-//       return res
-//         .status(404)
-//         .json({ message: "This user doses not have a business setup" });
-//     }
-//     const businessPosts = await PostSchema.find({
-//       ibmId: 7895971,
-//       status: "active",
-//     }).sort({ updatedAt: -1 });
-
-//     let sendPosts = businessPosts.map((advert) => {
-//       // advert._id = advert._id.toString();
-//       return {
-//         ...advert._doc,
-//         createdAt: advert.createdAt.toString(),
-//         updatedAt: advert.updatedAt.toString(),
-//         _id: advert._id.toString(),
-//         ownerId: advert.ownerId.toString(),
-//         PropertyPhotos: advert.postImages,
-//         Token: advert._id.toString(),
-//         BusinessToken: advert.ownerId.toString(),
-//         // postImages: "",
-//         // others: "",
-//       };
-//     });
-
-//     console.log(business);
-
-//     let sendBusiness = {
-//       ...business._doc,
-//       createdAt: business.createdAt?.toString(),
-//       updatedAt: business.updatedAt?.toString(),
-//       _id: business._id.toString(),
-//       ownerId: business.ownerId.toString(),
-//       Token: business.ownerId.toString(),
-//       LogoUrl: business.logo,
-//       BusinessId: business.ibmId,
-//     };
-//     console.log(business);
-//     const finalBusiness = { ...sendBusiness, posts: sendPosts };
-//     res.status(200).json(change.mainChangeFunction(finalBusiness));
-//   } catch (error) {
-//     // console.log(error);
-//     res.status(500).json({ message: error });
-//   }
-// });
+    res.status(200).json(change.arrayChangeFunctin(sendBusinesses));
+  } catch (error) {
+    // console.log(error);
+    res.status(500).json({ message: error });
+  }
+});
 
 BusinessesRouter.get("/business/my-business/:ownerId", async (req, res) => {
   try {
