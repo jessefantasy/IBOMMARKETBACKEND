@@ -26,10 +26,9 @@ PostsRoute.get("/post", async (req, res) => {
     // const posts = await PostModel.find({ })
     const requests = [];
     posts.forEach((post) => {
-      (post.impressions = post.impressions ? post.impressions + 1 : 1),
-        requests.push(post.save());
+      (post.impressions = 5), requests.push(post.save());
     });
-
+    // post.impressions ? post.impressions + 1 : 1;
     const incremented = await axios.all[
       requests.map((one) => {
         return one;
@@ -256,7 +255,7 @@ PostsRoute.get("/post-phoneviews/:_id", async (req, res) => {
     }
     await post.save();
 
-    res.status(200).json({ message: "Done", cookie: deviceCookie });
+    res.status(200).json({ message: "Done...", cookie: deviceCookie });
   } catch (error) {
     res.status(500).json({ error });
   }
