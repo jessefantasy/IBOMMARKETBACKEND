@@ -22,9 +22,7 @@ ManagerRouter.post("/admin-add-manager", async (req, res) => {
       });
     }
     const token = authorization.split("Bearer ")[1];
-    console.log(token);
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    console.log(verifiedToken);
     if (
       verifiedToken.role !== "admin" &&
       (verifiedToken.username !== "AJ" || verifiedToken.username !== "Jess")
@@ -39,7 +37,6 @@ ManagerRouter.post("/admin-add-manager", async (req, res) => {
     const roleDetails = { ...req.body };
     const defaultPassword =
       req.body.fullName.split(" ")[0].toLowerCase() + "@ibmommarket.com";
-    console.log(defaultPassword);
 
     if (req.body.role !== "manager") {
       return res.status(400).json({
@@ -63,11 +60,6 @@ ManagerRouter.post("/admin-add-manager", async (req, res) => {
       },
       "30m"
     );
-    console.log(
-      process.env.ADMIN_BASE_URL +
-        "manager/activate-role?token=" +
-        activationToken
-    );
     sendRoleActvationMail(
       role.email,
       role.fullName,
@@ -75,7 +67,6 @@ ManagerRouter.post("/admin-add-manager", async (req, res) => {
     );
     res.status(200).json(role);
   } catch (error) {
-    console.log(error);
     res.status(500).json(error);
   }
 });
@@ -93,9 +84,7 @@ ManagerRouter.get("/admin-get-manager", async (req, res) => {
       });
     }
     const token = authorization.split("Bearer ")[1];
-    console.log(token);
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    console.log(verifiedToken);
     if (
       verifiedToken.role !== "admin" &&
       (verifiedToken.username !== "AJ" || verifiedToken.username !== "Jess")
@@ -128,9 +117,7 @@ ManagerRouter.delete("/admin-delete-manager/:managerId", async (req, res) => {
       });
     }
     const token = authorization.split("Bearer ")[1];
-    console.log(token);
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    console.log(verifiedToken);
     if (
       verifiedToken.role !== "admin" &&
       (verifiedToken.username !== "AJ" || verifiedToken.username !== "Jess")
@@ -194,16 +181,10 @@ ManagerRouter.post("/manager/activate", async (req, res) => {
   try {
     // const { token } = req.query;
     const { token } = req.body;
-
-    console.log("152");
-
     if (!token || token == "undefined") {
       return res.status(400).json({ message: "Invalid token" });
     }
-    console.log(token);
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    console.log(verifiedToken);
-
     if (!verifiedToken.Id) {
       return res.status(400).json({ message: "Invalid token" });
     }

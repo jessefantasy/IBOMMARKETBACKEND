@@ -84,6 +84,18 @@ const schema = new Schema(
       required: true,
       default: 0,
     },
+    impressions: {
+      type: Number,
+      default: 0,
+    },
+    visits: {
+      type: [],
+      default: [],
+    },
+    phoneViews: {
+      type : [],
+      default : []
+    },
     others: {},
   },
   { timestamps: true }

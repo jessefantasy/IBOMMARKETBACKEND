@@ -23,9 +23,7 @@ RolesRouter.post("/add-role", async (req, res) => {
       });
     }
     const token = authorization.split("Bearer ")[1];
-    console.log(token);
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    console.log(verifiedToken);
     if (
       verifiedToken.role !== "admin" &&
       (verifiedToken.username !== "AJ" || verifiedToken.username !== "Jess")
@@ -40,7 +38,6 @@ RolesRouter.post("/add-role", async (req, res) => {
     const roleDetails = { ...req.body };
     const defaultPassword =
       req.body.fullName.split(" ")[0].toLowerCase() + "@ibmommarket.com";
-    console.log(defaultPassword);
     const newRole = RolesSchema({
       ...roleDetails,
     });
@@ -56,14 +53,12 @@ RolesRouter.post("/add-role", async (req, res) => {
     const sendEmailResponse = sendRoleActvationMail();
     res.status(200).json({ ...role._doc, defaultPassword });
   } catch (error) {
-    console.log(error);
     res.status(500).json(error);
   }
 });
 
 // activate role
 RolesRouter.get("/activate-role", async (req, res) => {
-  console.log("TRYING");
   try {
     const { token } = req.query;
     const verifiedToken = verifyToken(token);
@@ -80,7 +75,6 @@ RolesRouter.get("/activate-role", async (req, res) => {
 
     return res.status(200).json(role);
   } catch (error) {
-    console.log("ERROR", error);
     res.status(500).json({ error });
   }
 });
@@ -88,7 +82,6 @@ RolesRouter.get("/activate-role", async (req, res) => {
 RolesRouter.patch("/role/edit-password", async (req, res) => {
   try {
     const verifiedToken = processRoleAuthorizationToken(req, res);
-    console.log(verifiedToken);
     const hashedPassword = await hashFunction(req.body.password);
     const role = await RolesSchema.findOneAndUpdate(
       { _id: verifiedToken.Id },
@@ -96,7 +89,6 @@ RolesRouter.patch("/role/edit-password", async (req, res) => {
       { new: true }
     );
   } catch (error) {
-    console.log(error);
     req.status(500).json(error);
   }
 });
@@ -105,7 +97,6 @@ RolesRouter.post("/role/rend-password-reset", async (req, res) => {
   try {
     const { authorization } = req.headers;
   } catch (error) {
-    console.log(error);
     res.status(500).json(error);
   }
 });

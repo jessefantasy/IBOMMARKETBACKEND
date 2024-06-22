@@ -14,14 +14,10 @@ const getAllAdverts = async (req, res) => {
         _id: advert._id.toString(),
       };
     });
-    console.log("sendAdverts , start");
-    console.log(sendAdverts);
-    console.log("sendAdverts", "end");
     res
       .status(200)
       .json(changes.arrayChangeFunctin(sendAdverts, sendAdverts.length));
   } catch (err) {
-    console.log(err);
     res.status(500).json({ message: "internal server error" });
   }
 };

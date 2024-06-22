@@ -13,7 +13,6 @@ UrgentRequestRouter.get("/urgentRequests", async (req, res) => {
     const requests = await UrgentRequestModel.find().sort({ createdAt: -1 });
     res.status(200).json(requests);
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -59,7 +58,6 @@ UrgentRequestRouter.get(
         .status(200)
         .json(change.arrayChangeFunctin(shuffleArray(sendRequests)));
     } catch (error) {
-      console.log(error);
       res.status(500).json({ message: "Internal server error" });
     }
   }
@@ -69,13 +67,11 @@ UrgentRequestRouter.get("/urgentRequests/:_id", async (req, res) => {
   const { _id } = req.params;
   try {
     const request = await UrgentRequestModel.findOne({ _id });
-    console.log(request);
     if (!request) {
       return res.status(404).json({ message: "urgent request not found" });
     }
     res.status(200).json(request);
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -87,19 +83,14 @@ UrgentRequestRouter.post("/urgentRequests", async (req, res) => {
     const result = await newRequest.save();
     res.status(200).json(result);
   } catch (error) {
-    console.log(error);
-
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
 UrgentRequestRouter.patch("/urgentRequests-delete/:_id", async (req, res) => {
-  console.log(req.body);
   const { _id } = req.params;
   try {
     const result = await UrgentRequestModel.findOneAndDelete({ _id });
-    console.log(result, 97);
-    console.log(req.body.reason, 98);
 
     if (!result) {
       return res.status(404).json({ message: "urgent request not found" });
@@ -107,7 +98,6 @@ UrgentRequestRouter.patch("/urgentRequests-delete/:_id", async (req, res) => {
     sendUrgentRequestDeleteEmail(result.email, req.body.reason);
     res.status(200).json({ message: "Deleted" });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -125,7 +115,6 @@ UrgentRequestRouter.patch("/urgentRequests-activate/:_id", async (req, res) => {
     sendUrgentRequestActivationEmail(result.email);
     res.status(200).json({ message: "Activated" });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -157,13 +146,11 @@ UrgentRequestRouter.patch("/urgentRequests/:_id", async (req, res) => {
       req.body,
       { new: false }
     );
-    console.log(result);
     if (!result) {
       return res.status(404).json({ message: "urgent request not found" });
     }
     res.status(200).json({ message: "Updated", old: result });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });

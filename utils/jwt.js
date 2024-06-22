@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 
 export const signToken = (token, duration = null) => {
-  console.log(token);
   return jwt.sign(token, process.env.JWTSECRET, { expiresIn: duration });
 };
 
@@ -22,8 +21,6 @@ export const processRoleAuthorizationToken = (req, res) => {
   }
 
   const token = authorization.split("Bearer ")[1];
-  console.log(token);
   const verifiedToken = verifyToken(token);
-  console.log(verifiedToken);
   return verifiedToken;
 };

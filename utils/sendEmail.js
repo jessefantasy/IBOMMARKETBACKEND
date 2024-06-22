@@ -33,13 +33,7 @@ export const sendPasswordResetEmail = (email, username, link) => {
   `,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent : " + info.response);
-    }
-  });
+  transporter.sendMail(mailOptions, (error, info) => {});
 };
 
 export const sendRoleActvationMail = (email, username, link) => {
@@ -66,13 +60,7 @@ export const sendRoleActvationMail = (email, username, link) => {
   `,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent : " + info.response);
-    }
-  });
+  transporter.sendMail(mailOptions, (error, info) => {});
 };
 
 export const sendManagerWelcomeMail = (email, username, defaultPassword) => {
@@ -100,13 +88,7 @@ export const sendManagerWelcomeMail = (email, username, defaultPassword) => {
   `,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent : " + info.response);
-    }
-  });
+  transporter.sendMail(mailOptions, (error, info) => {});
 };
 
 export const sendUrgentRequestDeleteEmail = (email, reason) => {
@@ -133,13 +115,7 @@ export const sendUrgentRequestDeleteEmail = (email, reason) => {
   `,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent : " + info.response);
-    }
-  });
+  transporter.sendMail(mailOptions, (error, info) => {});
 };
 
 export const sendUrgentRequestActivationEmail = (email) => {
@@ -164,11 +140,5 @@ export const sendUrgentRequestActivationEmail = (email) => {
   `,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent : " + info.response);
-    }
-  });
+  transporter.sendMail(mailOptions, (error, info) => {});
 };

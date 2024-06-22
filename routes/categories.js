@@ -30,7 +30,6 @@ CategoriesRouter.get("/categories/:Id", async (req, res) => {
 
     res.status(200).json(category);
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "internal server server" });
   }
 });
@@ -41,19 +40,16 @@ CategoriesRouter.post(
   upload.fields([{ name: "file" }]),
   async (req, res) => {
     try {
-      console.log("Posting");
       let prevId = 1;
       const prevCategories = await CategoriesSchema.find();
       if (prevCategories.length != 0) {
         prevId = prevCategories[prevCategories.length - 1].Id + 1;
       }
       let imageUrl;
-      console.log(prevCategories);
       await Promise.all(
         req.files.file.map(async (image) => {
           const uploadPromise = promisify(cloud.uploader.upload);
           const result = await uploadPromise(image.path);
-          console.log(result);
           imageUrl = {
             ImageUrl: result.secure_url,
             Public_Id: result.public_id,
@@ -67,11 +63,9 @@ CategoriesRouter.post(
         ...imageUrl,
       });
 
-      console.log(newCategory, 68);
       const result = await newCategory.save();
       res.status(200).json({ result });
     } catch (error) {
-      console.log(error);
       res.status(500).json({ message: "internal server server", ...error });
     }
   }
@@ -90,7 +84,6 @@ CategoriesRouter.delete("/categories/:Id", async (req, res) => {
     } else {
       let results = [];
       const imagesToDestroy = [result, ...result.Subcategories];
-      console.log(imagesToDestroy);
       await Promise.all(
         imagesToDestroy.map(async (image) => {
           const uploadPromise = promisify(cloud.uploader.destroy);
@@ -101,7 +94,6 @@ CategoriesRouter.delete("/categories/:Id", async (req, res) => {
       res.status(200).json({ message: "Category deleted", results });
     }
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "internal server server", error });
   }
 });
@@ -119,7 +111,6 @@ CategoriesRouter.patch("/categories/:Id", async (req, res) => {
     }
     res.status(200).json({ result });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "internal server server", ...error });
   }
 });
@@ -137,14 +128,12 @@ CategoriesRouter.patch(
         req.files.file.map(async (image) => {
           const uploadPromise = promisify(cloud.uploader.upload);
           const result = await uploadPromise(image.path);
-          console.log(result);
           imageUrl = {
             ImageUrl: result.secure_url,
             Public_Id: result.public_id,
           };
         })
       );
-      console.log("NO BODY");
       sendData = { ...imageUrl, ...req.body };
 
       const saveData = await CategoriesSchema.findOneAndUpdate(
@@ -154,13 +143,10 @@ CategoriesRouter.patch(
           new: false,
         }
       );
-      console.log(saveData);
       cloud.uploader.destroy(saveData.Public_Id).then((result) => {
-        console.log(result);
         res.status(200).json({ message: "Updated category", saveData });
       });
     } catch (err) {
-      console.log(err);
       res.status(500).json({ message: "Intername server error" });
     }
   }
@@ -171,7 +157,6 @@ CategoriesRouter.get("/categories/:CatId/:Id", async (req, res) => {
   try {
     const { CatId, Id } = req.params;
     const mainCategory = await CategoriesSchema.findOne({ Id: CatId });
-    // console.log(mainCategory);
     if (!mainCategory) {
       return res.status(404).json({ message: "This category does not exist" });
     }
@@ -189,7 +174,6 @@ CategoriesRouter.get("/categories/:CatId/:Id", async (req, res) => {
     }
     res.status(200).json(subCategory);
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "internal server server", ...error });
   }
 });
@@ -200,7 +184,6 @@ CategoriesRouter.post(
   upload.fields([{ name: "file" }]),
   async (req, res) => {
     try {
-      console.log("Posting");
       const { CatId } = req.params;
       let prevId = 1;
 
@@ -211,24 +194,20 @@ CategoriesRouter.post(
           .json({ messgae: "Category with this id does not exist" });
       }
       const previousSubCaegories = mainCategory.Subcategories;
-      //   console.log(previousSubCaegories);
       if (previousSubCaegories.length != 0) {
         prevId = previousSubCaegories[previousSubCaegories.length - 1].Id + 1;
       }
       let imageUrl;
-      //   console.log(previousSubCaegories);
       await Promise.all(
         req.files.file.map(async (image) => {
           const uploadPromise = promisify(cloud.uploader.upload);
           const result = await uploadPromise(image.path);
-          console.log(result);
           imageUrl = {
             ImageUrl: result.secure_url,
             Public_Id: result.public_id,
           };
         })
       );
-      console.log(imageUrl);
       mainCategory.Subcategories.push({
         ...req.body,
         CategoryId: CatId,
@@ -238,7 +217,6 @@ CategoriesRouter.post(
       const result = await mainCategory.save();
       res.status(200).json({ result });
     } catch (error) {
-      console.log(error);
       res.status(500).json({ message: "internal server server", error });
     }
   }
@@ -272,7 +250,6 @@ CategoriesRouter.delete("/categories/:CatId/:Id", async (req, res) => {
       return res.status(200).json({ message: "deleted", ...save });
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "internal server server", error });
   }
 });
@@ -296,14 +273,10 @@ CategoriesRouter.patch("/categories/:CatId/:Id", async (req, res) => {
         .status(404)
         .json({ message: "Subcategory with this Id does not exist" });
     }
-    console.log(subCategoryExist);
     let patchedSubCategory = { ...subCategoryExist, ...req.body };
-    console.log("patchedSubCategory");
-    console.log(patchedSubCategory);
     const newSubCategories = mainCategory.Subcategories.filter(
       (one) => one.Id != Id
     );
-    console.log(req.body);
     mainCategory.Subcategories = [
       ...newSubCategories,
       { ...subCategoryExist, ...req.body },
@@ -314,7 +287,6 @@ CategoriesRouter.patch("/categories/:CatId/:Id", async (req, res) => {
       res.status(200).json({ message: "Sub category edited", mainCategory });
     }
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "internal server server", error });
   }
 });
@@ -340,14 +312,12 @@ CategoriesRouter.patch(
           .status(404)
           .json({ message: "Subcategory with this Id does not exist" });
       }
-      console.log(subCategoryExist);
       let imageUrl;
 
       await Promise.all(
         req.files.file.map(async (image) => {
           const uploadPromise = promisify(cloud.uploader.upload);
           const result = await uploadPromise(image.path);
-          console.log(result);
           imageUrl = {
             ImageUrl: result.secure_url,
             Public_Id: result.public_id,
@@ -364,20 +334,17 @@ CategoriesRouter.patch(
       const newSubCategories = mainCategory.Subcategories.filter(
         (one) => one.Id != Id
       );
-      console.log(req.body);
       mainCategory.Subcategories = [...newSubCategories, patchedSubCategory];
 
       const save = await mainCategory.save();
       if (save) {
         cloud.uploader.destroy(subCategoryExist.Public_Id).then((result) => {
-          console.log(result);
           res
             .status(200)
             .json({ message: "Sub category edited", mainCategory });
         });
       }
     } catch (error) {
-      console.log(error);
       res.status(500).json({ message: "internal server server", error });
     }
   }
@@ -388,11 +355,8 @@ CategoriesRouter.get(
   "/categories/subcategories/get-count/:Id",
   async (req, res) => {
     const { Id } = req.params;
-    console.log(Id, 390);
-    // parseInt()
     try {
       const result = await CategoriesSchema.findOne({ Id: parseInt(Id) });
-      console.log(result);
       if (!result) {
         return res
           .status(404)
@@ -409,21 +373,16 @@ CategoriesRouter.get(
         );
       });
       let axiosResponse = await axios.all(queries);
-      // console.log(axiosResponse);
       axiosResponse.forEach((one, index) => {
-        console.log(one);
-        console.log("one sifb sfu vhsfouvh svusfh vsf");
         results.push({
           count: one.length,
           Id: result.Subcategories[index].Id,
           Id: result.Subcategories[index].Name,
           SubCategories: result.Subcategories,
         });
-        // console.log(one.data.length);
       });
-      res.status(200).json( results );
+      res.status(200).json(results);
     } catch (error) {
-      console.log(error);
       res.status(500).json({ message: "internal server server", error });
     }
   }

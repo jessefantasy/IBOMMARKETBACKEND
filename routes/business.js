@@ -19,7 +19,6 @@ BusinessesRouter.get("/business", async (req, res) => {
     const businesses = await BusinessSchema.find({});
     res.status(200).json({ businesses });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: error });
   }
 });
@@ -56,11 +55,9 @@ BusinessesRouter.get("/business/:ownerId", async (req, res) => {
     } else {
       conditions.push({ ibmId: Number(ownerId) });
     }
-    console.log(conditions, 60);
     const business = await BusinessSchema.findOne({
       $or: conditions,
     });
-    console.log(business, 64);
     if (!business) {
       return res
         .status(404)
@@ -87,8 +84,6 @@ BusinessesRouter.get("/business/:ownerId", async (req, res) => {
       };
     });
 
-    console.log(business);
-
     let sendBusiness = {
       ...business._doc,
       createdAt: business.createdAt?.toString(),
@@ -99,11 +94,9 @@ BusinessesRouter.get("/business/:ownerId", async (req, res) => {
       LogoUrl: business.logo,
       BusinessId: business.ibmId,
     };
-    console.log(business);
     const finalBusiness = { ...sendBusiness, posts: sendPosts };
     res.status(200).json(change.mainChangeFunction(finalBusiness));
   } catch (error) {
-    // console.log(error);
     res.status(500).json({ message: error });
   }
 });
@@ -132,7 +125,6 @@ BusinessesRouter.get("/business-search", async (req, res) => {
 
     res.status(200).json(change.arrayChangeFunctin(sendBusinesses));
   } catch (error) {
-    // console.log(error);
     res.status(500).json({ message: error });
   }
 });
@@ -183,8 +175,6 @@ BusinessesRouter.get("/business/my-business/:ownerId", async (req, res) => {
       };
     });
 
-    console.log(business);
-
     let sendBusiness = {
       ...business._doc,
       createdAt: business.createdAt?.toString(),
@@ -193,16 +183,10 @@ BusinessesRouter.get("/business/my-business/:ownerId", async (req, res) => {
       ownerId: business.ownerId.toString(),
       Token: business.ownerId.toString(),
       LogoUrl: business.logo,
-
-      // postImages: "",
-      // others: "",
     };
     const finalBusiness = { ...sendBusiness, posts: sendPosts };
-    // console.log(sendBusiness);
-    // res.status(200).json(f);
     res.status(200).json(change.mainChangeFunction(finalBusiness));
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: error });
   }
 });
@@ -230,12 +214,10 @@ BusinessesRouter.post(
         req.files.logo.map(async (image) => {
           const uploadPromise = promisify(cloud.uploader.upload);
           const result = await uploadPromise(image.path);
-          console.log(result);
           imageUrl = { logo: result.secure_url, logoId: result.public_id };
         })
       );
       const prevBusinessIds = await IbommarketBusinessIDs.findOne({});
-      console.log(prevBusinessIds.IDS, 190);
       const newBusinessId = createIbmId(prevBusinessIds.IDS);
 
       prevBusinessIds.IDS.push(newBusinessId);
@@ -253,7 +235,6 @@ BusinessesRouter.post(
       );
       res.status(200).json({ business: result });
     } catch (error) {
-      console.log(error.code);
       if (error?.code == 11000) {
         let reason = "";
         for (let key in error.keyValue) {
@@ -285,10 +266,7 @@ BusinessesRouter.patch("/business/:_id", async (req, res) => {
     const token = authorization.split("Bearer ")[1];
 
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-
     const business = await BusinessSchema.findOne({ _id });
-    console.log(business);
-
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }
@@ -303,18 +281,15 @@ BusinessesRouter.patch("/business/:_id", async (req, res) => {
 
     for (const key in req.body) {
       business[key] = req.body[key];
-      console.log(key, req.body[key]);
     }
     await business.save();
     res.status(200).json({ business });
   } catch (error) {
-    console.log(error.code);
     if (error?.code == 11000) {
       let reason = "";
       for (let key in error.keyValue) {
         reason = error.keyValue[key];
       }
-      console.log(reason);
       res.statusMessage = `${reason} is already user by another Business`;
       return res
         .status(400)
@@ -344,9 +319,7 @@ BusinessesRouter.patch(
       const token = authorization.split("Bearer ")[1];
 
       const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-      console.log("Finding business");
       const business = await BusinessSchema.findOne({ _id });
-      console.log(business);
 
       if (!business) {
         return res.status(404).json({ message: "Business not found" });
@@ -357,17 +330,14 @@ BusinessesRouter.patch(
           .status(400)
           .json({ message: "you can only view your business" });
       }
-      console.log("Uploading new");
       let imageUrl;
       await Promise.all(
         req.files.logo.map(async (image) => {
           const uploadPromise = promisify(cloud.uploader.upload);
           const result = await uploadPromise(image.path);
-          console.log(result);
           imageUrl = { logo: result.secure_url, logoId: result.public_id };
         })
       );
-      console.log("deleting old");
 
       cloud.uploader.destroy(business.logoId).then(async (result) => {
         const newBody = { ...req.body, ...imageUrl };
@@ -377,9 +347,7 @@ BusinessesRouter.patch(
         await business.save();
         res.status(200).json({ business });
       });
-      console.log("hi");
     } catch (error) {
-      console.log(error);
       if (error?.code == 11000) {
         let reason = "";
         for (let key in error.keyValue) {
@@ -409,12 +377,8 @@ BusinessesRouter.delete("/business/:_id", async (req, res) => {
       });
     }
     const token = authorization.split("Bearer ")[1];
-
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    console.log("Finding business");
     const business = await BusinessSchema.findOne({ _id });
-    console.log(business);
-
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }
@@ -425,16 +389,11 @@ BusinessesRouter.delete("/business/:_id", async (req, res) => {
         .json({ message: "you can only view your business" });
     }
 
-    console.log("getting old");
     const deleteBusiness = await BusinessSchema.findOneAndDelete({ _id });
-    console.log("deleting old");
-
     cloud.uploader.destroy(deleteBusiness.logoId).then(async (result) => {
       res.status(200).json({ message: "Business deleted", deleteBusiness });
     });
-    console.log("hi");
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: error });
   }
 });

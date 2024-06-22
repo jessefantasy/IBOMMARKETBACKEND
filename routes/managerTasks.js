@@ -16,9 +16,7 @@ ManagerTasksRouter.get("/admin-manager-get-tasks", async (req, res) => {
       });
     }
     const token = authorization.split("Bearer ")[1];
-    console.log(token);
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    console.log(verifiedToken.role == "admin");
     if (!verifiedToken.role == "admin" || !verifiedToken.role == "manager") {
       return res.status(400).json({
         message: {
@@ -32,7 +30,6 @@ ManagerTasksRouter.get("/admin-manager-get-tasks", async (req, res) => {
 
     res.status(200).json(tasks);
   } catch (error) {
-    console.log(error);
     res.status(500).json(error);
   }
 });
@@ -49,9 +46,7 @@ ManagerTasksRouter.post("/admin-manager-post-tasks", async (req, res) => {
       });
     }
     const token = authorization.split("Bearer ")[1];
-    console.log(token);
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    console.log(verifiedToken.role == "admin");
     if (!verifiedToken.role == "admin") {
       return res.status(400).json({
         message: {
@@ -63,11 +58,9 @@ ManagerTasksRouter.post("/admin-manager-post-tasks", async (req, res) => {
     const task = new ManagerTaskSchema(req.body);
 
     const savedTask = await task.save();
-    console.log(savedTask);
 
     res.status(200).json({ ...savedTask._doc });
   } catch (error) {
-    console.log(error);
     res.status(500).json(error);
   }
 });

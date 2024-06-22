@@ -10,13 +10,13 @@ import { findMatchingPropertyInObjects } from "../utils/addFoundInPropertyToSear
 import { convertToMongooseQuery } from "../utils/formartQueryParams.js";
 import CategoriesSchema from "../schema/categories.js";
 import BusinessSchema from "../schema/business.js";
+import axios from "axios";
 
 const PostsRoute = Router();
 
 PostsRoute.get("/post", async (req, res) => {
   const { pageNumber } = req.query;
 
-  console.log(pageNumber);
   try {
     const posts = await PostModel.find({ status: "active" })
       .sort({ updatedAt: -1 })
@@ -24,6 +24,17 @@ PostsRoute.get("/post", async (req, res) => {
       .limit(20);
     // const posts = await PostModel.find({ }).skip( (pageNumber - 1) * 20 ).limit(20);
     // const posts = await PostModel.find({ })
+    const requests = [];
+    posts.forEach((post) => {
+      (post.impressions = post.impressions ? post.impressions + 1 : 1),
+        requests.push(post.save());
+    });
+
+    const incremented = await axios.all[
+      requests.map((one) => {
+        return one;
+      })
+    ];
 
     let sendPosts = posts.map((advert) => {
       // advert._id = advert._id.toString();
@@ -42,7 +53,6 @@ PostsRoute.get("/post", async (req, res) => {
     });
     res.status(200).json(changes.arrayChangeFunctin(sendPosts));
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error });
   }
 });
@@ -51,7 +61,6 @@ PostsRoute.get("/post", async (req, res) => {
 PostsRoute.get("/post/homepage/search", async (req, res) => {
   const { pageNumber, SearchTerm: searchTerm } = req.query;
 
-  console.log(pageNumber);
   try {
     const posts = await PostModel.find({
       status: "active",
@@ -81,7 +90,6 @@ PostsRoute.get("/post/homepage/search", async (req, res) => {
     sendPosts = findMatchingPropertyInObjects(sendPosts, searchTerm);
     res.status(200).json(changes.arrayChangeFunctin(sendPosts));
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error });
   }
 });
@@ -116,7 +124,6 @@ PostsRoute.get("/post-rejected/:_id", async (req, res) => {
       });
     }
 
-    console.log(rejectedPost, 122);
     let sendPost = {
       ...rejectedPost._doc,
       createdAt: rejectedPost.createdAt.toString(),
@@ -126,13 +133,9 @@ PostsRoute.get("/post-rejected/:_id", async (req, res) => {
       PropertyPhotos: rejectedPost.postImages,
       Token: rejectedPost._id.toString(),
       BusinessToken: rejectedPost.ownerId.toString(),
-      // postImages: "",
-      // others: "",
     };
-    console.log(sendPost, 135);
     res.status(200).json(changes.mainChangeFunction(sendPost));
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error });
   }
 });
@@ -143,8 +146,6 @@ PostsRoute.get("/post/filter/search", async (req, res) => {
 
   const { searchTerm, ...formQueryParams } = req.query;
   const mainQueryObject = convertToMongooseQuery(formQueryParams);
-
-  console.log(mainQueryObject, 92);
 
   try {
     const posts = await PostModel.find({
@@ -176,7 +177,6 @@ PostsRoute.get("/post/filter/search", async (req, res) => {
     sendPosts = findMatchingPropertyInObjects(sendPosts, searchTerm);
     res.status(200).json(changes.arrayChangeFunctin(sendPosts));
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error });
   }
 });
@@ -184,7 +184,6 @@ PostsRoute.get("/post/filter/search", async (req, res) => {
 PostsRoute.get("/post-admin", async (req, res) => {
   const { pageNumber } = req.query;
 
-  console.log(pageNumber);
   try {
     // const posts = await PostModel.find({status : "active" }).skip( (pageNumber - 1) * 20 ).limit(20);
     const posts = await PostModel.find({})
@@ -210,10 +209,10 @@ PostsRoute.get("/post-admin", async (req, res) => {
     });
     res.status(200).json(changes.arrayChangeFunctin(sendPosts));
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error });
   }
 });
+// get one post
 PostsRoute.get("/post/:_id", async (req, res) => {
   try {
     const { _id } = req.params;
@@ -221,7 +220,11 @@ PostsRoute.get("/post/:_id", async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: "This post does not exist" });
     }
-
+    const deviceCookie = req.cookies["ibm-device-id"];
+    if (deviceCookie && !post.visits.includes(deviceCookie)) {
+      post.visits.push(deviceCookie);
+    }
+    await post.save();
     let sendPost = {
       ...post._doc,
       createdAt: post.createdAt.toString(),
@@ -234,7 +237,27 @@ PostsRoute.get("/post/:_id", async (req, res) => {
     };
     res.status(200).json(changes.mainChangeFunction(sendPost));
   } catch (error) {
-    console.log(error);
+    res.status(500).json({ error });
+  }
+});
+
+// add phoneViews
+PostsRoute.get("/post-phoneviews/:_id", async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const post = await PostModel.findById(_id);
+    if (!post) {
+      return res.status(404).json({ message: "This post does not exist" });
+    }
+    const deviceCookie = req.cookies["ibm-device-id"];
+
+    if (deviceCookie && !post.phoneViews.includes(deviceCookie)) {
+      post.phoneViews.push(deviceCookie);
+    }
+    await post.save();
+
+    res.status(200).json({ message: "Done" });
+  } catch (error) {
     res.status(500).json({ error });
   }
 });
@@ -246,7 +269,6 @@ PostsRoute.get(
     try {
       const { _id, subcategoryId } = req.params;
       const posts = await PostModel.find({ subcategoryId });
-      console.log(posts, 198);
       let sendPosts = posts.map((post) => {
         return {
           ...post._doc,
@@ -262,7 +284,6 @@ PostsRoute.get(
 
       res.status(200).json(changes.mainChangeFunction(sendPosts));
     } catch (error) {
-      console.log(error);
       res.status(500).json({ error });
     }
   }
@@ -306,13 +327,11 @@ PostsRoute.post(
       categoryAndSubDetails.categoryName = belongsHere.Name;
       let subExits = 0;
       belongsHere.Subcategories.forEach((one) => {
-        console.log(one.Id, one.Name, req.body.subcategoryId);
         if (one.Id == Number(req.body.subcategoryId)) {
           subExits++;
           categoryAndSubDetails.subcategoryName = one.Name;
         }
       });
-      console.log(categoryAndSubDetails, subExits);
       if (subExits == 0) {
         return res
           .status(400)
@@ -533,9 +552,7 @@ PostsRoute.get("/admin-manager/get-post", async (req, res) => {
       });
     }
     const token = authorization.split("Bearer ")[1];
-    console.log(token);
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    console.log(verifiedToken.role == "admin");
     if (!verifiedToken.role == "admin" || !verifiedToken.role == "manager") {
       return res.status(400).json({
         message: {
@@ -565,9 +582,7 @@ PostsRoute.patch("/admin/admin-manager-edit-post/:_id", async (req, res) => {
       });
     }
     const token = authorization.split("Bearer ")[1];
-    console.log(token);
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    console.log(verifiedToken.role == "admin");
     if (!verifiedToken.role == "admin" || !verifiedToken.role == "manager") {
       return res.status(400).json({
         message: {

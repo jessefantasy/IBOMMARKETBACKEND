@@ -36,7 +36,6 @@ RequestCallbackRouter.post(
       res.statusMessage = "Message sent";
       return res.status(200).json({ message: "Request sent" });
     } catch (error) {
-      console.log(error);
       return res.status(500).json({ message: "Request sent" });
     }
   }
@@ -45,7 +44,6 @@ RequestCallbackRouter.post(
 // get all requests
 RequestCallbackRouter.get("/requested-callbacks/:ownerId", async (req, res) => {
   try {
-    console.log("TRYING TO GET RCB")
     const { authorization } = req.headers;
     const { ownerId } = req.params;
 
@@ -79,8 +77,7 @@ RequestCallbackRouter.get("/requested-callbacks/:ownerId", async (req, res) => {
     }
     return res.status(200).json(callBack);
   } catch (error) {
-    console.log(error);
-    res.statusMessage = "Something went wrong" ;
+    res.statusMessage = "Something went wrong";
     return res.status(500).json({ message: "Something went wrong" });
   }
 });
@@ -90,5 +87,4 @@ RequestCallbackRouter.get("/requested-callbacks/:ownerId", async (req, res) => {
 // deleted addressed callback
 // RequestCallbackRouter.delete();
 
-
-export default RequestCallbackRouter
+export default RequestCallbackRouter;

@@ -46,13 +46,7 @@ const sendPasswordResetEmail = (email, username, link) => {
   `,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent : " + info.response);
-    }
-  });
+  transporter.sendMail(mailOptions, (error, info) => {});
 };
 
 const comparePassword = async (savedPassword, enteredPassword) => {
@@ -103,13 +97,11 @@ UserRouter.post("/account/login", async (req, res) => {
     };
     res.status(200).json(change.mainChangeFunction(sendUser));
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error });
   }
 });
 
 UserRouter.get("/account/current-user", async (req, res) => {
-  console.log("Getting current-user");
   try {
     const { authorization } = req.headers;
 
@@ -126,8 +118,6 @@ UserRouter.get("/account/current-user", async (req, res) => {
         message: "user not found",
       });
     }
-    console.log(userId);
-    console.log(token);
     res.status(200).json({
       ...user._doc,
       Token: userId.Id,
@@ -141,7 +131,6 @@ UserRouter.get("/account/current-user", async (req, res) => {
 });
 
 UserRouter.post("/account/send-password-recovery-email", async (req, res) => {
-  console.log(req.baseUrl, 124);
   try {
     const { email } = req.body;
     const user = await UserSchema.findOne({ email: email });
@@ -154,7 +143,6 @@ UserRouter.post("/account/send-password-recovery-email", async (req, res) => {
       process.env.JWTSECRET,
       { expiresIn: "10m" }
     );
-    console.log(process.env.BASE_URL);
 
     sendPasswordResetEmail(
       email,
@@ -163,7 +151,6 @@ UserRouter.post("/account/send-password-recovery-email", async (req, res) => {
     );
     res.status(200).json({ message: "Sent to " + email });
   } catch (error) {
-    console.log(error);
     res.status(500).json(error);
   }
 });
@@ -173,7 +160,7 @@ UserRouter.post("/account/reset-password", async (req, res) => {
     const { password, token } = req.body;
     const userId = jwt.verify(token, process.env.JWTSECRET);
 
-    console.log(userId.Id);
+    userId.Id;
 
     const user = await UserSchema.findById(userId.Id);
 
@@ -192,7 +179,6 @@ UserRouter.post("/account/reset-password", async (req, res) => {
     // sendPasswordResetEmail(email ,"Ameh" , process.env.BASR_URL + token)
     res.status(200).json({ message: "password reset sucessful" });
   } catch (error) {
-    console.log(error);
     res.status(500).json(error);
   }
 });
@@ -238,7 +224,6 @@ UserRouter.post("/account/role-login", async (req, res) => {
           message: "invalid usernamer or password",
         });
       }
-      console.log(manager.status);
       if (manager.status != "active") {
         return res.status(400).json({
           message: "Account not activated, please contact admin",
@@ -257,17 +242,13 @@ UserRouter.post("/account/role-login", async (req, res) => {
       message: "invalid usernamer or password",
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json(error);
   }
 });
 // role current user
 UserRouter.get("/account/role-current-user", async (req, res) => {
-  console.log("Getting current-user");
   try {
     const { authorization } = req.headers;
-
-    console.log(authorization, "Line 247");
 
     if (!authorization || authorization.length < 10) {
       return res.status(400).json({ message: "Invalid token in header" });
@@ -292,15 +273,12 @@ UserRouter.get("/account/role-current-user", async (req, res) => {
         email: adminId.username,
       });
     }
-    console.log(adminId);
-    console.log(adminDetails);
 
     if (!adminDetails) {
       return res.status(404).json({
         message: "user not found",
       });
     }
-    console.log(token);
     return res.status(200).json({
       Username: adminDetails.username,
       Token: token,

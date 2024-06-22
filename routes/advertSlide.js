@@ -17,7 +17,6 @@ AdvertSlideRoute.get("/adverts/:Id", async (req, res) => {
     }
     res.status(200).json({ advert });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ message: "internal server error" });
   }
 });
@@ -47,13 +46,12 @@ AdvertSlideRoute.post(
         url: imageUrl.url,
         asset_id: imageUrl.id,
         id: lastId,
-      }; 
+      };
       const saveData = new AdvertSlideModel(data);
       const result = await saveData.save();
 
       res.status(200).json({ result });
     } catch (err) {
-      console.log(err);
       res.status(500).json({ message: err });
     }
   }
@@ -67,7 +65,6 @@ AdvertSlideRoute.delete("/adverts/:Id", async (req, res) => {
       res.status(200).json({ message: "Deleted advert", result });
     });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ message: "Internam server error" });
   }
 });
@@ -83,7 +80,6 @@ AdvertSlideRoute.patch("/adverts/:Id", async (req, res) => {
 
     res.status(200).json({ newAdvert });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -99,7 +95,7 @@ AdvertSlideRoute.patch(
         req.files.file.map(async (image) => {
           const uploadPromise = promisify(cloud.uploader.upload);
           const result = await uploadPromise(image.path);
-              imageUrl = { Url: result.secure_url, Asset_id: result.public_id };
+          imageUrl = { Url: result.secure_url, Asset_id: result.public_id };
         })
       );
       sendData = { ...imageUrl, ...req.body };
@@ -108,12 +104,11 @@ AdvertSlideRoute.patch(
         { Id },
         sendData,
         { new: false }
-      ); 
+      );
       cloud.uploader.destroy(saveData.Asset_id).then((result) => {
         res.status(200).json({ message: "Updated advert", saveData });
       });
     } catch (err) {
-      console.log(err);
       res.status(500).json({ message: "Intername server error" });
     }
     // res.status(200).json({ newAdvert: "dd" });
