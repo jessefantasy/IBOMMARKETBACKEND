@@ -219,7 +219,7 @@ PostsRoute.get("/post/:_id", async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: "This post does not exist" });
     }
-    const deviceCookie = req.cookies["ibm-device-id"];
+    const deviceCookie = req.cookies["ibm-device-id_"];
     if (deviceCookie && !post.visits.includes(deviceCookie)) {
       post.visits.push(deviceCookie);
     }
@@ -248,7 +248,7 @@ PostsRoute.get("/post-phoneviews/:_id", async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: "This post does not exist" });
     }
-    const deviceCookie = req.cookies["ibm-device-id"];
+    const deviceCookie = req.cookies["ibm-device-id_"];
 
     if (deviceCookie && !post.phoneViews.includes(deviceCookie)) {
       post.phoneViews.push(deviceCookie);
