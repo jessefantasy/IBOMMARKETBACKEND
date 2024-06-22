@@ -256,7 +256,7 @@ PostsRoute.get("/post-phoneviews/:_id", async (req, res) => {
     }
     await post.save();
 
-    res.status(200).json({ message: "Done" });
+    res.status(200).json({ message: "Done", cookie: deviceCookie });
   } catch (error) {
     res.status(500).json({ error });
   }
