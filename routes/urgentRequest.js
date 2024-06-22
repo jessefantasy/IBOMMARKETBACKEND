@@ -1,12 +1,16 @@
 import { Router } from "express";
 import UrgentRequestModel from "../schema/urgentRequest.js";
 import change from "../utils/change.js";
+import {
+  sendUrgentRequestDeleteEmail,
+  sendUrgentRequestActivationEmail,
+} from "../utils/sendEmail.js";
 
 const UrgentRequestRouter = Router();
 
 UrgentRequestRouter.get("/urgentRequests", async (req, res) => {
   try {
-    const requests = await UrgentRequestModel.find();
+    const requests = await UrgentRequestModel.find().sort({ createdAt: -1 });
     res.status(200).json(requests);
   } catch (error) {
     console.log(error);
@@ -17,7 +21,9 @@ UrgentRequestRouter.get(
   "/urgentrequests/randomurgentrequests",
   async (req, res) => {
     try {
-      let requests = await UrgentRequestModel.find().limit(50);
+      let requests = await UrgentRequestModel.find({ status: "active" }).limit(
+        50
+      );
 
       const firstThree = [];
       shuffleArray(requests).forEach((one, index) => {
@@ -87,23 +93,65 @@ UrgentRequestRouter.post("/urgentRequests", async (req, res) => {
   }
 });
 
-UrgentRequestRouter.delete("/urgentRequests/:_id", async (req, res) => {
+UrgentRequestRouter.patch("/urgentRequests-delete/:_id", async (req, res) => {
+  console.log(req.body);
   const { _id } = req.params;
   try {
     const result = await UrgentRequestModel.findOneAndDelete({ _id });
-    console.log(result);
+    console.log(result, 97);
+    console.log(req.body.reason, 98);
+
     if (!result) {
       return res.status(404).json({ message: "urgent request not found" });
     }
+    sendUrgentRequestDeleteEmail(result.email, req.body.reason);
     res.status(200).json({ message: "Deleted" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
-UrgentRequestRouter.patch("/urgentRequests/:_id", async (req, res) => {
+UrgentRequestRouter.patch("/urgentRequests-activate/:_id", async (req, res) => {
   const { _id } = req.params;
   try {
+    const result = await UrgentRequestModel.findOneAndUpdate(
+      { _id },
+      { status: "active" }
+    );
+
+    if (!result) {
+      return res.status(404).json({ message: "urgent request not found" });
+    }
+    sendUrgentRequestActivationEmail(result.email);
+    res.status(200).json({ message: "Activated" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+UrgentRequestRouter.patch("/urgentRequests/:_id", async (req, res) => {
+  const { authorization } = req.headers;
+  const { _id } = req.params;
+  try {
+    if (!authorization || authorization.length < 10) {
+      return res.status(400).json({
+        message: {
+          name: "JsonWebTokenError",
+          message: "invalid token",
+        },
+      });
+    }
+    const token = authorization.split("Bearer ")[1];
+    const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+    if (!verifiedToken.role == "admin" || !verifiedToken.role == "manager") {
+      return res.status(400).json({
+        message: {
+          name: "Authorization Error",
+          message: "You are not an admin",
+        },
+      });
+    }
     const result = await UrgentRequestModel.findOneAndUpdate(
       { _id },
       req.body,

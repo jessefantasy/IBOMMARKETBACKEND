@@ -34,6 +34,10 @@ const schema = new Schema(
     linkToBusinessPage: {
       type: String,
     },
+    status: {
+      type: String,
+      default: "pending", //active,reviewing,rejected,closed
+    },
   },
   { timestamps: true }
 );

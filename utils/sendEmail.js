@@ -108,3 +108,67 @@ export const sendManagerWelcomeMail = (email, username, defaultPassword) => {
     }
   });
 };
+
+export const sendUrgentRequestDeleteEmail = (email, reason) => {
+  const mailOptions = {
+    from: "amehharrison2020@gmail.com",
+    to: email,
+    subject: "Urgent request on Ibommarket not approved ",
+    html: `
+    <div >
+      <p>Hi ${email},</p>
+
+ 
+      <p> The urgent request you uploaded on ibommarket was rejected because of the reason(s) stated below</p>
+      <p></p>
+      <p>${reason}</p>
+      
+      <p>Please do well to post another request minding the reason why the first was denied  </p>
+      <p></p>
+
+
+      <p> Visit Ibommarket on <a href="https://ibommarketfrontend.onrender.com/">   here  </a> to make another request </p> 
+  
+    </div>
+  `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent : " + info.response);
+    }
+  });
+};
+
+export const sendUrgentRequestActivationEmail = (email) => {
+  const mailOptions = {
+    from: "amehharrison2020@gmail.com",
+    to: email,
+    subject: "Urgent request on Ibommarket approved ",
+    html: `
+    <div >
+      <p>Hi ${email},</p>
+
+ 
+      <p> The urgent request you uploaded on ibommarket is not live</p>
+      <p></p> 
+      <p></p>
+      <p> Please note all request are deleted after two days</p>
+
+
+      <p> You can visit Ibommarket <a href="https://ibommarketfrontend.onrender.com/">   here  </a>  </p> 
+  
+    </div>
+  `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent : " + info.response);
+    }
+  });
+};
