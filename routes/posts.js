@@ -27,7 +27,7 @@ PostsRoute.get("/post", async (req, res) => {
     // const posts = await PostModel.find({ })
     const requests = [];
     posts.forEach((post) => {
-      post.impressions ? post.impressions + 1 : 1, requests.push(post.save());
+      (post.impressions = post.impressions + 1), requests.push(post.save());
     });
     // post.impressions ? post.impressions + 1 : 1;
     const incremented = await axios.all[
