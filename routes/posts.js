@@ -27,7 +27,7 @@ PostsRoute.get("/post", async (req, res) => {
     // const posts = await PostModel.find({ })
     const requests = [];
     posts.forEach((post) => {
-      (post.impressions = 5), requests.push(post.save());
+      post.impressions ? post.impressions + 1 : 1, requests.push(post.save());
     });
     // post.impressions ? post.impressions + 1 : 1;
     const incremented = await axios.all[
@@ -220,7 +220,8 @@ PostsRoute.get("/post/:_id", async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: "This post does not exist" });
     }
-    const deviceCookie = req.cookies["ibm-device-id_"];
+    const deviceCookie = getCookie(req.headers.cookie, "ibm-device-id");
+
     if (deviceCookie && !post.visits.includes(deviceCookie)) {
       post.visits.push(deviceCookie);
     }
@@ -255,7 +256,12 @@ PostsRoute.get("/post-phoneviews/:_id", async (req, res) => {
       post.phoneViews.push(deviceCookie);
     }
     await post.save();
-    res.status(200).json({ message: "Done ...", cookie: deviceCookie });
+    res.status(200).json({
+      message: "Done ...",
+      cookies: req.headers.cookie,
+      cookie: deviceCookie,
+      secondCookie: req.cookies,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error });
