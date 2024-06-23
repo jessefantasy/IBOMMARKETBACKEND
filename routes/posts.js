@@ -248,13 +248,13 @@ PostsRoute.get("/post-phoneviews/:_id", async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: "This post does not exist" });
     }
-    const deviceCookie = req.cookies["ibm-device-id_"];
+    const deviceCookie = req.cookies["ibm-track-id"];
 
     if (deviceCookie && !post.phoneViews.includes(deviceCookie)) {
       post.phoneViews.push(deviceCookie);
     }
     await post.save();
-
+    console.log(deviceCookie);
     res.status(200).json({ message: "Done .../", cookie: deviceCookie });
   } catch (error) {
     res.status(500).json({ error });
