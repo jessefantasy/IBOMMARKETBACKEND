@@ -216,11 +216,13 @@ PostsRoute.get("/post-admin", async (req, res) => {
 PostsRoute.get("/post/:_id", async (req, res) => {
   try {
     const { _id } = req.params;
+    const { cookie: deviceCookie } = req.query;
+
     const post = await PostModel.findById(_id);
     if (!post) {
       return res.status(404).json({ message: "This post does not exist" });
     }
-    const deviceCookie = getCookie(req.headers.cookie, "ibm-device-id");
+    // const deviceCookie = getCookie(req.headers.cookie, "ibm-device-id");
 
     if (deviceCookie && !post.visits.includes(deviceCookie)) {
       post.visits.push(deviceCookie);
@@ -246,21 +248,21 @@ PostsRoute.get("/post/:_id", async (req, res) => {
 PostsRoute.get("/post-phoneviews/:_id", async (req, res) => {
   try {
     const { _id } = req.params;
+    const { cookie: deviceCookie } = req.query;
     const post = await PostModel.findById(_id);
     if (!post) {
       return res.status(404).json({ message: "This post does not exist" });
     }
-    const deviceCookie = getCookie(req.headers.cookie, "ibm-device-id");
+    // const deviceCookie = getCookie(req.headers.cookie, "ibm-device-id");
 
     if (deviceCookie && !post.phoneViews.includes(deviceCookie)) {
       post.phoneViews.push(deviceCookie);
     }
+    // console.log(deviceCookie);
     await post.save();
     res.status(200).json({
       message: "Done ...",
-      cookies: req.headers.cookie,
       cookie: deviceCookie,
-      secondCookie: req.cookies,
     });
   } catch (error) {
     console.log(error);
