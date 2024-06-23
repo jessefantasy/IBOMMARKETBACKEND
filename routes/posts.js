@@ -8,6 +8,7 @@ import PostModel from "../schema/posts.js";
 import PostSchema from "../schema/posts.js";
 import { findMatchingPropertyInObjects } from "../utils/addFoundInPropertyToSearch.js";
 import { convertToMongooseQuery } from "../utils/formartQueryParams.js";
+import { getCookie } from "../utils/cookie.js";
 import CategoriesSchema from "../schema/categories.js";
 import BusinessSchema from "../schema/business.js";
 import axios from "axios";
@@ -248,15 +249,15 @@ PostsRoute.get("/post-phoneviews/:_id", async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: "This post does not exist" });
     }
-    const deviceCookie = req.cookies["ibm-track-id"];
+    const deviceCookie = getCookie(req.headers.cookie, "ibm-device-id");
 
     if (deviceCookie && !post.phoneViews.includes(deviceCookie)) {
       post.phoneViews.push(deviceCookie);
     }
     await post.save();
-    console.log(deviceCookie);
-    res.status(200).json({ message: "Done .../", cookie: deviceCookie });
+    res.status(200).json({ message: "Done ...", cookie: deviceCookie });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error });
   }
 });
