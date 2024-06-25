@@ -25,16 +25,6 @@ PostsRoute.get("/post", async (req, res) => {
       .limit(20);
     // const posts = await PostModel.find({ }).skip( (pageNumber - 1) * 20 ).limit(20);
     // const posts = await PostModel.find({ })
-    const requests = [];
-    posts.forEach((post) => {
-      (post.impressions = post.impressions + 1), requests.push(post.save());
-    });
-    // post.impressions ? post.impressions + 1 : 1;
-    const incremented = await axios.all[
-      requests.map((one) => {
-        return one;
-      })
-    ];
 
     let sendPosts = posts.map((advert) => {
       // advert._id = advert._id.toString();
@@ -216,7 +206,7 @@ PostsRoute.get("/post-admin", async (req, res) => {
 PostsRoute.get("/post/:_id", async (req, res) => {
   try {
     const { _id } = req.params;
-    const { cookie: deviceCookie } = req.query;
+    const { cookie: deviceCookie, isMine } = req.query;
 
     const post = await PostModel.findById(_id);
     if (!post) {
@@ -224,9 +214,18 @@ PostsRoute.get("/post/:_id", async (req, res) => {
     }
     // const deviceCookie = getCookie(req.headers.cookie, "ibm-device-id");
 
-    if (deviceCookie && !post.visits.includes(deviceCookie)) {
+    if (
+      deviceCookie &&
+      isMine != post.ownerId &&
+      !post.visits.includes(deviceCookie)
+    ) {
       post.visits.push(deviceCookie);
     }
+
+    if (deviceCookie && isMine != post.ownerId) {
+      post.impressions = post.impressions + 1;
+    }
+
     await post.save();
     let sendPost = {
       ...post._doc,
@@ -240,6 +239,7 @@ PostsRoute.get("/post/:_id", async (req, res) => {
     };
     res.status(200).json(changes.mainChangeFunction(sendPost));
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error });
   }
 });
