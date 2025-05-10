@@ -2,6 +2,11 @@ import mongoose, { Schema } from "mongoose";
 
 const schema = new Schema(
   {
+    ownerId: {
+      type: String,
+      required: true,
+      immutable: true,
+    },
     urgentRequestType: {
       type: Number,
       required: true,

@@ -19,8 +19,13 @@ import RequestCallbackRouter from "./routes/requestedCallbacks.js";
 
 dotenv.config();
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://ibommarketfrontend.onrender.com"],
-  methods: "*",
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://ibommarketfrontend.onrender.com",
+    "https://ibommarketbackendmin.onrender.com",
+  ],
+  methods: ["GET", "PUT", "POST", "DELETE", "PATCH"],
   credentials: true,
 };
 
@@ -54,7 +59,9 @@ async function connectMongo() {
       console.log("Server running on port 3000");
     });
     // makeAnalytics();
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 connectMongo();

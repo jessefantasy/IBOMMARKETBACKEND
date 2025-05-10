@@ -188,8 +188,7 @@ UserRouter.post("/account/role-login", async (req, res) => {
     const { username, password, role } = req.body;
     if (
       username == process.env.AJUSERNAME &&
-      password == process.env.AJPASSWORD &&
-      role == "admin"
+      password == process.env.AJPASSWORD
     ) {
       const token = jwt.sign(
         { username: "AJ", role: "admin" },
@@ -202,8 +201,7 @@ UserRouter.post("/account/role-login", async (req, res) => {
     }
     if (
       username == process.env.JESSUSERNAME &&
-      password == process.env.JESSPASSWORD &&
-      role == "admin"
+      password == process.env.JESSPASSWORD
     ) {
       const token = jwt.sign(
         { username: "Jess", role: "admin" },

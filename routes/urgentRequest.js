@@ -5,12 +5,15 @@ import {
   sendUrgentRequestDeleteEmail,
   sendUrgentRequestActivationEmail,
 } from "../utils/sendEmail.js";
+import jwt from "jsonwebtoken";
 
 const UrgentRequestRouter = Router();
 
 UrgentRequestRouter.get("/urgentRequests", async (req, res) => {
   try {
-    const requests = await UrgentRequestModel.find().sort({ createdAt: -1 });
+    const requests = await UrgentRequestModel.find({ status: "active" }).sort({
+      createdAt: -1,
+    });
     res.status(200).json(requests);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
@@ -76,6 +79,41 @@ UrgentRequestRouter.get("/urgentRequests/:_id", async (req, res) => {
   }
 });
 
+// get all for specific user
+UrgentRequestRouter.get(
+  "/urgentrequests/get-for-specific-user/:ownerId",
+  async (req, res) => {
+    const { ownerId } = req.params;
+    const { authorization } = req.headers;
+
+    try {
+      if (!authorization || authorization.length < 10) {
+        return res.status(400).json({
+          message: {
+            name: "JsonWebTokenError",
+            message: "invalid token",
+          },
+        });
+      }
+      const token = authorization.split("Bearer ")[1];
+      const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+
+      if (verifiedToken.Id !== ownerId) {
+        return res.status(400).json({
+          message: "You can only edit your own post",
+        });
+      }
+
+      const urgentRequests = await UrgentRequestModel.find({ ownerId });
+
+      res.status(200).json(urgentRequests);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
 UrgentRequestRouter.post("/urgentRequests", async (req, res) => {
   try {
     const newRequest = new UrgentRequestModel(req.body);
@@ -83,11 +121,23 @@ UrgentRequestRouter.post("/urgentRequests", async (req, res) => {
     const result = await newRequest.save();
     res.status(200).json(result);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
-UrgentRequestRouter.patch("/urgentRequests-delete/:_id", async (req, res) => {
+UrgentRequestRouter.get("/urgentRequests-admin", async (req, res) => {
+  try {
+    const requests = await UrgentRequestModel.find({}).sort({
+      createdAt: -1,
+    });
+    res.status(200).json(requests);
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+UrgentRequestRouter.delete("/urgentRequests-delete/:_id", async (req, res) => {
   const { _id } = req.params;
   try {
     const result = await UrgentRequestModel.findOneAndDelete({ _id });
@@ -101,6 +151,43 @@ UrgentRequestRouter.patch("/urgentRequests-delete/:_id", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+UrgentRequestRouter.delete(
+  "/user-urgentRequests-delete/:ownerId/:_id",
+  async (req, res) => {
+    const { _id } = req.params;
+
+    const { ownerId } = req.params;
+    const { authorization } = req.headers;
+
+    try {
+      if (!authorization || authorization.length < 10) {
+        return res.status(400).json({
+          message: {
+            name: "JsonWebTokenError",
+            message: "invalid token",
+          },
+        });
+      }
+      const token = authorization.split("Bearer ")[1];
+      const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+
+      if (verifiedToken.Id !== ownerId) {
+        return res.status(400).json({
+          message: "You can only edit your own post",
+        });
+      }
+      const result = await UrgentRequestModel.findOneAndDelete({ _id });
+
+      if (!result) {
+        return res.status(404).json({ message: "urgent request not found" });
+      }
+      sendUrgentRequestDeleteEmail(result.email, req.body.reason);
+      res.status(200).json({ message: "Deleted" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
 UrgentRequestRouter.patch("/urgentRequests-activate/:_id", async (req, res) => {
   const { _id } = req.params;
   try {

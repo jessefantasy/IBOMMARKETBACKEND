@@ -208,7 +208,7 @@ PostsRoute.get("/post/:_id", async (req, res) => {
     const { _id } = req.params;
     const { cookie: deviceCookie, isMine } = req.query;
 
-    const post = await PostModel.findById(_id);
+    const post = await PostModel.findOne({ _id, status: "active" });
     if (!post) {
       return res.status(404).json({ message: "This post does not exist" });
     }
@@ -276,7 +276,7 @@ PostsRoute.get(
   async (req, res) => {
     try {
       const { _id, subcategoryId } = req.params;
-      const posts = await PostModel.find({ subcategoryId });
+      const posts = await PostModel.find({ subcategoryId, status: "active" });
       let sendPosts = posts.map((post) => {
         return {
           ...post._doc,
