@@ -93,8 +93,11 @@ const schema = new Schema(
       default: [],
     },
     phoneViews: {
-      type : [],
-      default : []
+      type: [],
+      default: [],
+    },
+    businessName: {
+      type: String,
     },
     others: {},
   },
