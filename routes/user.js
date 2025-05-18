@@ -5,6 +5,7 @@ import change from "../utils/change.js";
 import { createTransport } from "nodemailer";
 import * as argon2 from "argon2";
 import ManagerSchema from "../schema/manager.js";
+import axios from "axios";
 
 const UserRouter = Router();
 
@@ -101,6 +102,48 @@ UserRouter.post("/account/login", async (req, res) => {
   }
 });
 
+UserRouter.post("/account/google-auth", async (req, res) => {
+  try {
+    const { access_token } = req.body;
+    const response = await axios.get(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      }
+    );
+    const email = response.data.email;
+
+    let user = await UserSchema.findOne({ email });
+
+    if (!user) {
+      user = new UserSchema({
+        userName: email,
+        email,
+      });
+
+      await user.save();
+    }
+
+    const token = jwt.sign({ Id: user._id }, process.env.JWTSECRET, {
+      expiresIn: "30d",
+    });
+
+    const sendUser = {
+      ...user._docs,
+      Id: user._id.toString(),
+      token,
+      password: "",
+      version: 0,
+    };
+    res.status(200).json(change.mainChangeFunction(sendUser));
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error });
+  }
+});
+
 UserRouter.get("/account/current-user", async (req, res) => {
   try {
     const { authorization } = req.headers;
@@ -144,6 +187,7 @@ UserRouter.post("/account/send-password-recovery-email", async (req, res) => {
       { expiresIn: "10m" }
     );
 
+    console.log(token);
     sendPasswordResetEmail(
       email,
       user.username,
@@ -167,14 +211,15 @@ UserRouter.post("/account/reset-password", async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "No user found!" });
     } else if (user.version !== userId.version) {
-      return res.status(404).json({ message: "Token already used!" });
+      return res.status(400).json({ message: "Token already used!" });
     }
 
     const newPassword = await hashPassword(password);
 
     user.password = newPassword;
     user.version = user.version + 1;
-    await user.save();
+    const updated = await user.save();
+    console.log(updated);
 
     // sendPasswordResetEmail(email ,"Ameh" , process.env.BASR_URL + token)
     res.status(200).json({ message: "password reset sucessful" });

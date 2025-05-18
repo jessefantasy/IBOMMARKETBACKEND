@@ -9,20 +9,19 @@ const schema = new Schema(
     },
     password: {
       type: String,
-      required: true,
     },
     username: {
       type: String,
       required: true,
       unique: true,
     },
-    businessId : {
-      type : String
+    businessId: {
+      type: String,
     },
-    version : {
-      type : Number,
-      default : 0
-    }
+    version: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
