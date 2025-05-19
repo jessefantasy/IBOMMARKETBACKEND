@@ -6,6 +6,9 @@ import { createTransport } from "nodemailer";
 import * as argon2 from "argon2";
 import ManagerSchema from "../schema/manager.js";
 import axios from "axios";
+import { OAuth2Client } from "google-auth-library";
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const UserRouter = Router();
 
@@ -114,6 +117,47 @@ UserRouter.post("/account/google-auth", async (req, res) => {
       }
     );
     const email = response.data.email;
+
+    let user = await UserSchema.findOne({ email });
+
+    if (!user) {
+      user = new UserSchema({
+        userName: email,
+        email,
+      });
+
+      await user.save();
+    }
+
+    const token = jwt.sign({ Id: user._id }, process.env.JWTSECRET, {
+      expiresIn: "30d",
+    });
+
+    const sendUser = {
+      ...user._docs,
+      Id: user._id.toString(),
+      token,
+      password: "",
+      version: 0,
+    };
+    res.status(200).json(change.mainChangeFunction(sendUser));
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error });
+  }
+});
+
+UserRouter.post("/account/google-one-tap-auth", async (req, res) => {
+  try {
+    const { access_token } = req.body;
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: access_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    console.log(ticket.payload.email);
+
+    const email = ticket.payload.email;
 
     let user = await UserSchema.findOne({ email });
 
