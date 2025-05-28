@@ -14,6 +14,7 @@ import RolesRouter from "./routes/roles.js";
 import ManagerRouter from "./routes/manager.js";
 import ManagerTasksRouter from "./routes/managerTasks.js";
 import RequestCallbackRouter from "./routes/requestedCallbacks.js";
+import SavedRouter from "./routes/saved.js";
 
 // import
 
@@ -44,6 +45,7 @@ server.use("/", RolesRouter);
 server.use("/", ManagerRouter);
 server.use("/", ManagerTasksRouter);
 server.use("/", RequestCallbackRouter);
+server.use("/", SavedRouter);
 server.get("/", (req, res) => {
   res
     .status(200)

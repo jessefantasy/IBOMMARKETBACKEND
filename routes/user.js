@@ -122,7 +122,7 @@ UserRouter.post("/account/google-auth", async (req, res) => {
 
     if (!user) {
       user = new UserSchema({
-        userName: email,
+        username: email,
         email,
       });
 
