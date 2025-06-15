@@ -49,6 +49,8 @@ server.use("/", RequestCallbackRouter);
 server.use("/", SavedRouter);
 server.use("/", UiConfigRouter);
 server.get("/", (req, res) => {
+  console.log(res.cookie["ibm-device-id"]);
+  console.log(res.cookies);
   res
     .status(200)
     .json({ message: "Done", cookie: req.cookies["ibm-device-id"] });
