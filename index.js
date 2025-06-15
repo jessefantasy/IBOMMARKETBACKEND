@@ -15,6 +15,7 @@ import ManagerRouter from "./routes/manager.js";
 import ManagerTasksRouter from "./routes/managerTasks.js";
 import RequestCallbackRouter from "./routes/requestedCallbacks.js";
 import SavedRouter from "./routes/saved.js";
+import UiConfigRouter from "./routes/uiconfig.js"; // Assuming you have a UiConfigRouter for UI configuration
 
 // import
 
@@ -46,6 +47,7 @@ server.use("/", ManagerRouter);
 server.use("/", ManagerTasksRouter);
 server.use("/", RequestCallbackRouter);
 server.use("/", SavedRouter);
+server.use("/", UiConfigRouter);
 server.get("/", (req, res) => {
   res
     .status(200)

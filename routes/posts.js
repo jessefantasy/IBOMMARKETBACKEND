@@ -12,21 +12,31 @@ import { getCookie } from "../utils/cookie.js";
 import CategoriesSchema from "../schema/categories.js";
 import BusinessSchema from "../schema/business.js";
 import axios from "axios";
+import getRecommendedPosts from "../utils/getRecommendedPosts.js";
 
 const PostsRoute = Router();
 
 PostsRoute.get("/post", async (req, res) => {
   const { pageNumber } = req.query;
 
+  const cookieHeader = req.headers.cookie.split("=")[1];
+  console.log("cookieHeader", cookieHeader);
+  const mainCookie = cookieHeader.split(";")[0];
+
+  console.log(mainCookie);
+
   try {
-    const posts = await PostModel.find({ status: "active" })
-      .sort({ updatedAt: -1 })
-      .skip((pageNumber - 1) * 20)
-      .limit(20);
+    const suggestedPosts = await getRecommendedPosts(mainCookie, pageNumber);
+    // console.log("suggestedPosts", suggestedPosts);
+
+    // const posts = await PostModel.find({ status: "active" })
+    //   .sort({ updatedAt: -1 })
+    //   .skip((pageNumber - 1) * 20)
+    //   .limit(20);
     // const posts = await PostModel.find({ }).skip( (pageNumber - 1) * 20 ).limit(20);
     // const posts = await PostModel.find({ })
 
-    let sendPosts = posts.map((advert) => {
+    let sendPosts = suggestedPosts.map((advert) => {
       // advert._id = advert._id.toString();
       return {
         ...advert._doc,
