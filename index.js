@@ -28,7 +28,7 @@ const corsOptions = {
     "https://ibommarketbackendmin.onrender.com",
   ],
   methods: ["GET", "PUT", "POST", "DELETE", "PATCH"],
-  credentials: true,
+  // credentials: true,
 };
 
 const server = express();

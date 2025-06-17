@@ -19,12 +19,12 @@ const PostsRoute = Router();
 PostsRoute.get("/post", async (req, res) => {
   const { pageNumber } = req.query;
 
-  const cookieHeader = req.headers.cookie.split("=")[1];
-  console.log("number 23.....", req.headers.cookie);
-  console.log("cookieHeader", cookieHeader);
-  const mainCookie = cookieHeader.split(";")[0];
+  // const cookieHeader = req.headers.cookie.split("=")[1];
+  // console.log("number 23.....", req.headers.cookie);
+  // console.log("cookieHeader", cookieHeader);
+  // const mainCookie = cookieHeader.split(";")[0];
 
-  console.log(mainCookie);
+  // console.log(mainCookie);
 
   try {
     // const suggestedPosts = await getRecommendedPosts(mainCookie, pageNumber);
