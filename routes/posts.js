@@ -27,17 +27,19 @@ PostsRoute.get("/post", async (req, res) => {
   console.log(mainCookie);
 
   try {
-    const suggestedPosts = await getRecommendedPosts(mainCookie, pageNumber);
-    // console.log("suggestedPosts", suggestedPosts);
+    // const suggestedPosts = await getRecommendedPosts(mainCookie, pageNumber);
+    // // console.log("suggestedPosts", suggestedPosts);
 
-    // const posts = await PostModel.find({ status: "active" })
-    //   .sort({ updatedAt: -1 })
+    const posts = await PostModel.find({ status: "active" })
+      .sort({ updatedAt: -1 })
+      .skip((pageNumber - 1) * 20)
+      .limit(20);
+    // const posts = await PostModel.find({})
     //   .skip((pageNumber - 1) * 20)
     //   .limit(20);
-    // const posts = await PostModel.find({ }).skip( (pageNumber - 1) * 20 ).limit(20);
-    // const posts = await PostModel.find({ })
+    // const posts = await PostModel.find({});
 
-    let sendPosts = suggestedPosts.map((advert) => {
+    let sendPosts = posts.map((advert) => {
       // advert._id = advert._id.toString();
       return {
         ...advert._doc,
