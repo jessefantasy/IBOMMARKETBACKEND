@@ -26,6 +26,7 @@ const corsOptions = {
     "http://localhost:5174",
     "https://ibommarketfrontend.onrender.com",
     "https://ibommarketbackendmin.onrender.com",
+    "https://ibommarketfrontend-a0qt.onrender.com",
   ],
   methods: ["GET", "PUT", "POST", "DELETE", "PATCH"],
   // credentials: true,
