@@ -29,7 +29,7 @@ const corsOptions = {
     "https://ibommarketfrontend-a0qt.onrender.com",
   ],
   methods: ["GET", "PUT", "POST", "DELETE", "PATCH"],
-  // credentials: true,
+  credentials: true,
 };
 
 const server = express();

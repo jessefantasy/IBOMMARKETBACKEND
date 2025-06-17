@@ -22,7 +22,6 @@ const getRecommendedPosts = async (trackingId, pageNumber) => {
       .sort((a, b) => b[1] - a[1])
       .map((entry) => entry[0]);
 
-    console.log(24, sortedSubcategories);
     if (sortedSubcategories.length === 0) {
       const allPosts = await PostSchema.find({
         status: "active",
