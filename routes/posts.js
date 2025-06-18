@@ -19,23 +19,16 @@ const PostsRoute = Router();
 PostsRoute.get("/post", async (req, res) => {
   const { pageNumber } = req.query;
 
-  console.log(req.cookies);
-  console.log(req.headers.cookie);
-  // const cookieHeader = req.headers.cookie.split("=")[1];
-  // console.log("number 23.....", req.headers.cookie);
-  // console.log("cookieHeader", cookieHeader);
-  // const mainCookie = cookieHeader.split(";")[0];
-
-  // console.log(mainCookie);
+  console.log(req.cookies["ibm-track-id"]);
+  const mainCookie = req.cookies["ibm-track-id"];
 
   try {
-    // const suggestedPosts = await getRecommendedPosts(mainCookie, pageNumber);
-    // // console.log("suggestedPosts", suggestedPosts);
+    const posts = await getRecommendedPosts(mainCookie, pageNumber);
 
-    const posts = await PostModel.find({ status: "active" })
-      .sort({ updatedAt: -1 })
-      .skip((pageNumber - 1) * 20)
-      .limit(20);
+    // const posts = await PostModel.find({ status: "active" })
+    //   .sort({ updatedAt: -1 })
+    //   .skip((pageNumber - 1) * 20)
+    //   .limit(20);
     // const posts = await PostModel.find({})
     //   .skip((pageNumber - 1) * 20)
     //   .limit(20);
