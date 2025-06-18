@@ -19,8 +19,8 @@ const PostsRoute = Router();
 PostsRoute.get("/post", async (req, res) => {
   const { pageNumber } = req.query;
 
-  console.log(req.cookies["ibm-track-id"]);
-  const mainCookie = req.cookies["ibm-track-id"];
+  console.log("cookie", req.cookies["ibm-post-visits"]);
+  const mainCookie = req.cookies["ibm-post-visits"];
 
   try {
     const posts = await getRecommendedPosts(mainCookie, pageNumber);
