@@ -18,12 +18,11 @@ const PostsRoute = Router();
 
 PostsRoute.get("/post", async (req, res) => {
   const { pageNumber } = req.query;
-
-  console.log("cookie", req.cookies["ibm-post-visits"]);
-  const mainCookie = req.cookies["ibm-post-visits"];
+  const { trackId } = req.query;
 
   try {
-    const posts = await getRecommendedPosts(mainCookie, pageNumber);
+    console.log("trackId", trackId);
+    const posts = await getRecommendedPosts(trackId, pageNumber);
 
     // const posts = await PostModel.find({ status: "active" })
     //   .sort({ updatedAt: -1 })
