@@ -36,6 +36,14 @@ const server = express();
 server.use(cors(corsOptions));
 server.use(express.json());
 server.use(cookieParser());
+server.use((req, res, next) => {
+  res.cookie("ibm-post-visits", "", {
+    secure: true,
+    sameSite: "none",
+    domain: "https://ibommarketfrontend-a0qt.onrender.com",
+  });
+  next();
+});
 
 server.use("/", PostsRoute);
 server.use("/", AdvertSlideRoute);
