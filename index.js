@@ -16,6 +16,8 @@ import ManagerTasksRouter from "./routes/managerTasks.js";
 import RequestCallbackRouter from "./routes/requestedCallbacks.js";
 import SavedRouter from "./routes/saved.js";
 import UiConfigRouter from "./routes/uiconfig.js"; // Assuming you have a UiConfigRouter for UI configuration
+import ReportAbuseRouter from "./routes/reportAbuse.js";
+import FeedbackRouter from "./routes/feedbacks.js";
 
 // import
 
@@ -57,6 +59,8 @@ server.use("/", ManagerTasksRouter);
 server.use("/", RequestCallbackRouter);
 server.use("/", SavedRouter);
 server.use("/", UiConfigRouter);
+server.use("/", ReportAbuseRouter);
+server.use("/", FeedbackRouter);
 server.get("/", (req, res) => {
   console.log(res.cookie["ibm-device-id"]);
   console.log(res.cookies);

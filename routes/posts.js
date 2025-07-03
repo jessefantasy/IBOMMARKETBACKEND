@@ -11,6 +11,8 @@ import { convertToMongooseQuery } from "../utils/formartQueryParams.js";
 import { getCookie } from "../utils/cookie.js";
 import CategoriesSchema from "../schema/categories.js";
 import BusinessSchema from "../schema/business.js";
+import UserVisitsSchema from "../schema/userVsits.js";
+import handleTrackUUID from "../utils/trackUUIDHandler.js";
 import axios from "axios";
 import getRecommendedPosts from "../utils/getRecommendedPosts.js";
 
@@ -22,12 +24,18 @@ PostsRoute.get("/post", async (req, res) => {
 
   try {
     console.log("trackId", trackId);
-    const posts = await getRecommendedPosts(trackId, pageNumber);
+    let userVisit;
+    // Handle track UUID operations
+    // if (trackId) {
+    //   userVisit = await handleTrackUUID(trackId);
+    // }
 
-    // const posts = await PostModel.find({ status: "active" })
-    //   .sort({ updatedAt: -1 })
-    //   .skip((pageNumber - 1) * 20)
-    //   .limit(20);
+    // const posts = await getRecommendedPosts(trackId, pageNumber);
+
+    const posts = await PostModel.find({ status: "active" })
+      .sort({ updatedAt: -1 })
+      .skip((pageNumber - 1) * 20)
+      .limit(20);
     // const posts = await PostModel.find({})
     //   .skip((pageNumber - 1) * 20)
     //   .limit(20);
@@ -50,6 +58,7 @@ PostsRoute.get("/post", async (req, res) => {
     });
     res.status(200).json(changes.arrayChangeFunctin(sendPosts));
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error });
   }
 });
@@ -631,4 +640,27 @@ PostsRoute.patch("/admin/admin-manager-edit-post/:_id", async (req, res) => {
     res.status(500).json({ message: error });
   }
 });
+
+// Test route for track UUID functionality
+PostsRoute.get("/test-track-uuid/:trackId", async (req, res) => {
+  try {
+    const { trackId } = req.params;
+
+    // Test the track UUID handler
+    const result = await handleTrackUUID(trackId);
+
+    res.status(200).json({
+      message: "Track UUID operation completed successfully",
+      trackId: trackId,
+      result: result,
+    });
+  } catch (error) {
+    console.error("Error in test track UUID route:", error);
+    res.status(500).json({
+      message: "Error processing track UUID",
+      error: error.message,
+    });
+  }
+});
+
 export default PostsRoute;
