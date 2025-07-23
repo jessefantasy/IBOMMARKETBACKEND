@@ -15,6 +15,7 @@ import UserVisitsSchema from "../schema/userVsits.js";
 import handleTrackUUID from "../utils/trackUUIDHandler.js";
 import axios from "axios";
 import getRecommendedPosts from "../utils/getRecommendedPosts.js";
+import { uploadRateLimit } from "../middlewares/rateLimiters.js";
 
 const PostsRoute = Router();
 
@@ -316,6 +317,7 @@ PostsRoute.get(
 //
 PostsRoute.post(
   "/post",
+  uploadRateLimit,
   upload.fields([{ name: "file" }]),
   async (req, res) => {
     try {

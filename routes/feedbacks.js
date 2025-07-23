@@ -8,6 +8,46 @@ import jwt from "jsonwebtoken";
 
 const FeedbackRouter = Router();
 
+FeedbackRouter.get("/feedbacks/get-user-feedback-logs", async (req, res) => {
+  try {
+    const { authorization } = req.headers;
+
+    if (!authorization || authorization.length < 10) {
+      return res.status(400).json({
+        message: {
+          name: "JsonWebTokenError",
+          message: "invalid token",
+        },
+      });
+    }
+    const token = authorization.split("Bearer ")[1];
+
+    const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+    const received = await FeedbackSchema.find({
+      ownerId: verifiedToken.Id,
+    }).sort({ createdAt: 1 });
+    const sent = await FeedbackSchema.find({
+      $or: [{ "senderDetails.id": verifiedToken.Id }],
+    }).sort({ createdAt: 1 });
+    const receivedWithType = received.map((item) => ({
+      ...item.toObject(),
+      type: "received",
+    }));
+    const sentWithType = sent.map((item) => ({
+      ...item.toObject(),
+      type: "sent",
+    }));
+
+    res.status(201).json({
+      message: "Report submitted successfully",
+      report: [...receivedWithType, ...sentWithType],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 FeedbackRouter.post(
   "/feedbacks/create/:id",
   upload.fields([{ name: "images" }]),
