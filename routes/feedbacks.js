@@ -31,11 +31,11 @@ FeedbackRouter.get("/feedbacks/get-user-feedback-logs", async (req, res) => {
     }).sort({ createdAt: 1 });
     const receivedWithType = received.map((item) => ({
       ...item.toObject(),
-      type: "received",
+      fromMe: false,
     }));
     const sentWithType = sent.map((item) => ({
       ...item.toObject(),
-      type: "sent",
+      fromMe: true,
     }));
 
     res.status(201).json({
