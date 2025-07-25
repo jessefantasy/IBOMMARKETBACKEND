@@ -8,7 +8,7 @@ const redisClient = new Redis(
 export const generalApiLimiter = new RateLimiterRedis({
   storeClient: redisClient,
   keyPrefix: "general_api",
-  points: 100, // Max 100 requests
+  points: 500, // Max 100 requests
   duration: 900, // Per 15 minutes (900s)
 });
 

@@ -3,7 +3,7 @@ import { generalApiLimiter, fileUploadLimiter } from "../utils/rateLimiter.js";
 
 // 🌐 General API middleware
 export function generalRateLimit(req, res, next) {
-  const key = req.ip;
+  const key = req.headers["x-forwarded-for"] || req.ip;
 
   generalApiLimiter
     .consume(key)
