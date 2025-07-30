@@ -27,6 +27,10 @@ const schema = new Schema(
       required: true,
     }, // Owner profile (business or user receiving feedback)
 
+    weight: {
+      type: Number,
+      default: 0,
+    }, // Weight of the feedback
     ownerDetails: {
       type: { name: String, businessId: String, logo: String },
       required: true,

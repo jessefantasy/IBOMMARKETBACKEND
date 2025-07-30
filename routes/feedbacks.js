@@ -96,14 +96,20 @@ FeedbackRouter.post(
         body.senderDetails = {
           id: verifiedToken.Id,
           name: "Anonymous",
-          profileImage: "https://img.icons8.com/ios-glyphs/30/user--v1.png", // Default anonymous image
+          profileImage: "https://i.ibb.co/bRschFm5/User-Octagon-Bulk-80px.png", // Default anonymous image
         };
+        body.weight = 0.25;
       } else {
         body.senderDetails = {
           id: senderDetails._id,
           name: senderDetails.businessName,
           profileImage: senderDetails.logo,
         };
+        if (senderDetails.isVerified) {
+          body.weight = 5;
+        } else {
+          body.weight = 0.5;
+        }
       }
       if (req.files && req.files.images) {
         const imageUrls = [];
