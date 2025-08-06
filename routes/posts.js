@@ -155,6 +155,16 @@ PostsRoute.get("/post/filter/search", async (req, res) => {
   const mainQueryObject = convertToMongooseQuery(formQueryParams);
 
   try {
+    console.log({
+      status: "active",
+      $or: [
+        { title: { $regex: title, $options: "i" } },
+        { description: { $regex: title, $options: "i" } },
+        { categoryName: { $regex: title, $options: "i" } },
+        { subcategoryName: { $regex: title, $options: "i" } },
+      ],
+      ...mainQueryObject,
+    });
     const posts = await PostModel.find({
       status: "active",
       $or: [
