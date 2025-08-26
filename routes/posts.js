@@ -229,6 +229,33 @@ PostsRoute.get("/post-admin", async (req, res) => {
     res.status(500).json({ error });
   }
 });
+// admin get one
+
+PostsRoute.get("/post-admin/:_id", async (req, res) => {
+  const { _id } = req.params;
+
+  try {
+    const post = await PostModel.findOne({ _id });
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    let sendPost = {
+      ...post._doc,
+      createdAt: post.createdAt.toString(),
+      updatedAt: post.updatedAt.toString(),
+      _id: post._id.toString(),
+      ownerId: post.ownerId.toString(),
+      PropertyPhotos: post.postImages,
+      Token: post._id.toString(),
+      BusinessToken: post.ownerId.toString(),
+    };
+    res.status(200).json(changes.mainChangeFunction(sendPost));
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error });
+  }
+});
+
 // get one post
 PostsRoute.get("/post/:_id", async (req, res) => {
   try {
