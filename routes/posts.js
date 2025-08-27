@@ -603,31 +603,60 @@ PostsRoute.delete("/post/:_id", async (req, res) => {
 // admin interraction
 
 // admin and manager get
+
 PostsRoute.get("/admin-manager/get-post", async (req, res) => {
   try {
     const { authorization } = req.headers;
-    if (!authorization || authorization.length < 10) {
+    if (!authorization || !authorization.startsWith("Bearer ")) {
       return res.status(400).json({
         message: {
           name: "JsonWebTokenError",
-          message: "invalid token",
+          message: "Invalid or missing token",
         },
       });
     }
+
     const token = authorization.split("Bearer ")[1];
     const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
-    if (!verifiedToken.role == "admin" || !verifiedToken.role == "manager") {
-      return res.status(400).json({
+
+    // FIXED: Use proper logical OR
+    if (verifiedToken.role !== "admin" && verifiedToken.role !== "manager") {
+      return res.status(403).json({
         message: {
-          name: "Authorization Error",
-          message: "You are not an admin",
+          name: "AuthorizationError",
+          message: "You are not authorized",
         },
       });
     }
-    const posts = await PostSchema.find();
 
-    return res.status(200).json({ ...posts });
-  } catch (error) {}
+    // Pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [posts, total] = await Promise.all([
+      PostSchema.find().skip(skip).limit(limit).sort({ createdAt: -1 }),
+      PostSchema.countDocuments(),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return res.status(200).json({
+      currentPage: page,
+      totalPages,
+      pageSize: limit,
+      totalItems: total,
+      items: posts,
+    });
+  } catch (error) {
+    console.error("Error in get-post route:", error);
+    return res.status(500).json({
+      message: {
+        name: "ServerError",
+        message: "Something went wrong",
+      },
+    });
+  }
 });
 
 // admin and manager edit
