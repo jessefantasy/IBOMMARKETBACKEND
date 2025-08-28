@@ -551,6 +551,47 @@ PostsRoute.patch(
   }
 );
 
+// close advert
+
+PostsRoute.patch("/post-open-close/:_id", async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const { authorization } = req.headers;
+
+    if (!authorization || authorization.length < 10) {
+      return res.status(400).json({
+        message: {
+          name: "JsonWebTokenError",
+          message: "invalid token",
+        },
+      });
+    }
+    const token = authorization.split("Bearer ")[1];
+
+    const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+    const editPost = await PostModel.findOne({ _id });
+    if (!editPost) {
+      return res.status(404).json({
+        message: "No post with this id found",
+      });
+    }
+
+    if (verifiedToken.Id !== editPost.ownerId.toString()) {
+      return res.status(400).json({
+        message: "You can only edit your own post",
+      });
+    }
+    const mainEdit = await PostModel.findOneAndUpdate(
+      { _id },
+      { status: req.body.status }
+    );
+    return res.status(200).json(mainEdit);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error });
+  }
+});
+
 PostsRoute.delete("/post/:_id", async (req, res) => {
   try {
     const { _id } = req.params;
