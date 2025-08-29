@@ -356,7 +356,9 @@ CategoriesRouter.get(
   async (req, res) => {
     const { Id } = req.params;
     try {
-      const result = await CategoriesSchema.findOne({ Id: parseInt(Id) });
+      const result = await CategoriesSchema.findOne({
+        Id: parseInt(Id),
+      });
       if (!result) {
         return res
           .status(404)
@@ -369,6 +371,7 @@ CategoriesRouter.get(
           PostSchema.find({
             categoryId: parseInt(Id),
             subcategoryId: subCategory.Id,
+            status: "active",
           })
         );
       });

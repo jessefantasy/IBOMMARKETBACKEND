@@ -21,6 +21,8 @@ import SavedRouter from "./routes/saved.js";
 import UiConfigRouter from "./routes/uiconfig.js"; // Assuming you have a UiConfigRouter for UI configuration
 import ReportAbuseRouter from "./routes/reportAbuse.js";
 import FeedbackRouter from "./routes/feedbacks.js";
+import AdminRouter from "./routes/admin.js";
+
 import { Server } from "socket.io";
 // import
 
@@ -66,6 +68,7 @@ server.use("/", SavedRouter);
 server.use("/", UiConfigRouter);
 server.use("/", ReportAbuseRouter);
 server.use("/", FeedbackRouter);
+server.use("/", AdminRouter);
 
 const app = http.createServer(server);
 const io = new Server(app, {

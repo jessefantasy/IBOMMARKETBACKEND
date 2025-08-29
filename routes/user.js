@@ -272,34 +272,53 @@ UserRouter.post("/account/reset-password", async (req, res) => {
   }
 });
 
+UserRouter.post("/account/settings-reset-password", async (req, res) => {
+  try {
+    const { current, newPass } = req.body;
+    const { authorization } = req.headers;
+
+    if (!authorization || authorization.length < 10) {
+      return res.status(400).json({
+        message: {
+          name: "JsonWebTokenError",
+          message: "invalid token",
+        },
+      });
+    }
+
+    const token = authorization.split("Bearer ")[1];
+    const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+
+    const userId = verifiedToken.Id;
+
+    const user = await UserSchema.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "No user found!" });
+    } else if (user.version !== userId.version) {
+      return res.status(400).json({ message: "Token already used!" });
+    }
+
+    if (!comparePassword(user.password, current)) {
+      return res
+        .status(400)
+        .json({ message: "Current password is incorrect!" });
+    }
+    const newPassword = await hashPassword(newPass);
+
+    user.password = newPassword;
+    user.version = user.version + 1;
+    const updated = await user.save();
+    console.log(updated);
+    res.status(200).json({ message: "password reset sucessful" });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
+
 UserRouter.post("/account/role-login", async (req, res) => {
   try {
     const { username, password, role } = req.body;
-    if (
-      username == process.env.AJUSERNAME &&
-      password == process.env.AJPASSWORD
-    ) {
-      const token = jwt.sign(
-        { username: "AJ", role: "admin" },
-        process.env.JWTSECRET
-      );
-
-      return res
-        .status(200)
-        .json({ Username: "AJ", Token: token, Role: "admin" });
-    }
-    if (
-      username == process.env.JESSUSERNAME &&
-      password == process.env.JESSPASSWORD
-    ) {
-      const token = jwt.sign(
-        { username: "Jess", role: "admin" },
-        process.env.JWTSECRET
-      );
-      return res
-        .status(200)
-        .json({ Username: "Jess", Token: token, Role: "admin" });
-    }
 
     if (role == "manager") {
       const manager = await ManagerSchema.findOne({
