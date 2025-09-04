@@ -41,6 +41,7 @@ AdminRouter.post("/verify-2fa", async (req, res) => {
   try {
     const { token, code } = req.body;
     const decoded = jwt.verify(token, process.env.JWTSECRET);
+    console.log(decoded);
     let secret;
     if (decoded.username == "AJ") {
       secret = process.env.AJSECRET;
@@ -50,7 +51,6 @@ AdminRouter.post("/verify-2fa", async (req, res) => {
       return res.status(401).json({ message: "Invalid user" });
     }
 
-    console.log(secret);
     const verified = speakeasy.totp.verify({
       secret,
       encoding: "base32",
