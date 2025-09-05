@@ -51,6 +51,9 @@ AdminRouter.post("/verify-2fa", async (req, res) => {
       return res.status(401).json({ message: "Invalid user" });
     }
 
+    console.log(code)
+    console.log(secret)
+
     const verified = speakeasy.totp.verify({
       secret,
       encoding: "base32",
@@ -61,6 +64,7 @@ AdminRouter.post("/verify-2fa", async (req, res) => {
       { username: decoded.username, role: "admin" },
       process.env.JWTSECRET
     );
+    console.log(verified)
     if (verified) {
       return res
         .status(200)
@@ -74,27 +78,27 @@ AdminRouter.post("/verify-2fa", async (req, res) => {
   }
 });
 
-// AdminRouter.post("/2fa/generate", async (req, res) => {
-//   try {
-//     const { username } = req.body;
+AdminRouter.post("/2fa/generate", async (req, res) => {
+  try {
+    const { username } = req.body;
 
-//     const secret = speakeasy.generateSecret({ name: "Admin Jess", length: 20 });
-//     const token = speakeasy.totp({
-//       secret: secret.base32,
-//       encoding: "base32",
-//     });
+    const secret = speakeasy.generateSecret({ name: "AJ@IBM", length: 20 });
+    const token = speakeasy.totp({
+      secret: secret.base32,
+      encoding: "base32",
+    });
 
-//     console.log(secret);
-//     const qrCode = await qrcode.toDataURL(secret.otpauth_url);
+    console.log(secret);
+    const qrCode = await qrcode.toDataURL(secret.otpauth_url);
 
-//     return res.status(200).json({
-//       message: "2FA setup successful",
-//       qrCode,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({ message: "Internal server error" });
-//   }
-// });
+    return res.status(200).json({
+      message: "2FA setup successful",
+      qrCode,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 export default AdminRouter;
