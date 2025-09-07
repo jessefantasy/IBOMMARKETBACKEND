@@ -22,6 +22,10 @@ const schema = new Schema(
       type: Number,
       default: 0,
     },
+    emailVerified : {
+      type : Boolean ,
+    default : false
+    }
   },
   { timestamps: true }
 );

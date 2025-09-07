@@ -142,3 +142,29 @@ export const sendUrgentRequestActivationEmail = (email) => {
 
   transporter.sendMail(mailOptions, (error, info) => {});
 };
+
+export const sendVerifyAccountMail = (email, username, link) => {
+  const mailOptions = {
+    from: "amehharrison2020@gmail.com",
+    to: email,
+    subject: "Verify your account",
+    html: `
+    <div >
+      <p>Hi ${username},</p>
+
+ 
+      <p>To verify your account please click on the link:</p>
+
+      <p><a href="${link}">Verify account</a></p>
+
+      <p>If you are unable to click the link, please copy and paste it into your browser's address bar.</p>
+
+      <p>Please note that this link is valid for 10 mins  </p>
+      <p>Disregard this email if you did not request for this verification  </p>
+  
+    </div>
+  `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {});
+};

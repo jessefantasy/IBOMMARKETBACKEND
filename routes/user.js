@@ -7,6 +7,7 @@ import * as argon2 from "argon2";
 import ManagerSchema from "../schema/manager.js";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
+import { sendVerifyAccountMail } from "../utils/sendEmail.js";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -76,6 +77,29 @@ UserRouter.post("/account/register", async (req, res) => {
   }
 });
 
+UserRouter.post("/account/verify-account", async (req, res) => {
+  try {
+    const { token } = req.body;
+    const validatedToken = jwt.verify(token, process.env.JWTSECRET);
+    console.log(validatedToken);
+
+    const user = await UserSchema.findOne({ email: validatedToken.Email });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+    user.emailVerified = true;
+
+    await user.save();
+    res.status(200).json({ verified: true });
+  } catch (error) {
+    console.log(error);
+    if (error.name == "TokenExpiredError") {
+      return res.status(401).json({ message: "Token has expired" });
+    }
+    res.status(500).json({ error });
+  }
+});
+
 UserRouter.post("/account/login", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -88,7 +112,28 @@ UserRouter.post("/account/login", async (req, res) => {
     if (!passwordMatch) {
       return res.status(404).json({ message: "Invalid username or password" });
     }
-    const token = jwt.sign({ Id: user._id }, process.env.JWTSECRET, {
+
+    let token;
+    if (user.emailVerified === false) {
+      token = jwt.sign(
+        { Id: user._id, Email: user.email },
+        process.env.JWTSECRET,
+        {
+          expiresIn: "10m",
+        }
+      );
+
+      console.log(user.email);
+      console.log(user.username);
+      console.log(token);
+      sendVerifyAccountMail(
+        user.email,
+        user.username,
+        process.env.BASE_URL + "verify-account?token=" + token
+      );
+      return res.status(450).json({ message: "Email address not verified" });
+    }
+    token = jwt.sign({ Id: user._id }, process.env.JWTSECRET, {
       expiresIn: "30d",
     });
 
@@ -124,8 +169,8 @@ UserRouter.post("/account/google-auth", async (req, res) => {
       user = new UserSchema({
         username: email,
         email,
+        emailVerified: true,
       });
-
       await user.save();
     }
 
@@ -165,6 +210,7 @@ UserRouter.post("/account/google-one-tap-auth", async (req, res) => {
       user = new UserSchema({
         userName: email,
         email,
+        emailVerified: true,
       });
 
       await user.save();

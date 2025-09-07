@@ -82,7 +82,7 @@ AdminRouter.post("/2fa/generate", async (req, res) => {
   try {
     const { username } = req.body;
 
-    const secret = speakeasy.generateSecret({ name: "AJ@IBM", length: 20 });
+    const secret = speakeasy.generateSecret({ name: "AJ IBM", length: 20 });
     const token = speakeasy.totp({
       secret: secret.base32,
       encoding: "base32",
