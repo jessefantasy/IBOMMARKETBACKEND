@@ -56,16 +56,20 @@ AdvertSlideRoute.post(
     }
   }
 );
-AdvertSlideRoute.delete("/adverts/:Id", async (req, res) => {
-  const { Id } = req.params;
+AdvertSlideRoute.delete("/adverts/:id", async (req, res) => {
+  const { id } = req.params;
   try {
     // const data =
-    const data = await AdvertSlideModel.findOneAndDelete({ Id });
-    cloud.uploader.destroy(data.Asset_id).then((result) => {
+    const data = await AdvertSlideModel.findOneAndDelete({ _id: id });
+    if (!data) {
+      return res.status(404).json({ message: "Advert not found" });
+    }
+    cloud.uploader.destroy(data.asset_id).then((result) => {
       res.status(200).json({ message: "Deleted advert", result });
     });
   } catch (err) {
-    res.status(500).json({ message: "Internam server error" });
+    console.log(err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 

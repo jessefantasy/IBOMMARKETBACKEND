@@ -57,7 +57,7 @@ PostsRoute.get("/post", async (req, res) => {
         // others: "",
       };
     });
-    res.status(200).json(changes.arrayChangeFunctin(sendPosts));
+    res.status(200).json(changes.arrayChangeFunction(sendPosts));
   } catch (error) {
     console.log(error);
     res.status(500).json({ error });
@@ -95,7 +95,7 @@ PostsRoute.get("/post/homepage/search", async (req, res) => {
       };
     });
     sendPosts = findMatchingPropertyInObjects(sendPosts, searchTerm);
-    res.status(200).json(changes.arrayChangeFunctin(sendPosts));
+    res.status(200).json(changes.arrayChangeFunction(sendPosts));
   } catch (error) {
     res.status(500).json({ error });
   }
@@ -192,7 +192,7 @@ PostsRoute.get("/post/filter/search", async (req, res) => {
       };
     });
     sendPosts = findMatchingPropertyInObjects(sendPosts, searchTerm);
-    res.status(200).json(changes.arrayChangeFunctin(sendPosts));
+    res.status(200).json(changes.arrayChangeFunction(sendPosts));
   } catch (error) {
     res.status(500).json({ error });
   }
@@ -224,7 +224,7 @@ PostsRoute.get("/post-admin", async (req, res) => {
         // others: "",
       };
     });
-    res.status(200).json(changes.arrayChangeFunctin(sendPosts));
+    res.status(200).json(changes.arrayChangeFunction(sendPosts));
   } catch (error) {
     res.status(500).json({ error });
   }

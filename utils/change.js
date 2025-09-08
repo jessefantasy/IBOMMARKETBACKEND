@@ -1,44 +1,54 @@
-const changeFirstAlphabet = (value) => {
-  let remaining = value.split("");
-  remaining.splice(0, 1);
-  return value[0].toUpperCase() + remaining.join("");
+const toPascalCase = (str) => {
+  if (!str || typeof str !== "string") return str;
+  return str
+    .replace(/[_-\s]+/g, " ") // replace _, -, spaces with space
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join("");
 };
 
-function arrayChangeFunctin(value) {
-  const newArray = [];
-  let count = 0;
-  for (let i = 0; i < value.length; i++) {
-    if (typeof value[i] !== "object") {
-      newArray.push(value[i]);
-    } else {
-      newArray.push(mainChangeFunction(value[i]));
-    }
+export function arrayChangeFunction(value) {
+  if (!Array.isArray(value)) {
+    return value; // safeguard: just return as-is
   }
 
-  return newArray;
+  return value.map((item) =>
+    Array.isArray(item)
+      ? arrayChangeFunction(item) // recurse if it's a nested array
+      : typeof item === "object" && item !== null
+      ? mainChangeFunction(item)
+      : item
+  );
 }
-function justAdverts(value) {
-  const newArray = [];
 
-  value.forEach((one) => {
-    newArray.push(mainChangeFunction(one));
-  });
-  return newArray;
+function justAdverts(value) {
+  if (!Array.isArray(value)) return value;
+  return value.map((one) => mainChangeFunction(one));
 }
-function mainChangeFunction(object) {
+
+export function mainChangeFunction(object) {
+  if (object === null || typeof object !== "object") {
+    return object;
+  }
+
+  if (Array.isArray(object)) {
+    return arrayChangeFunction(object);
+  }
+
   const newObject = {};
   for (let key in object) {
-    if (typeof object[key] !== "object") {
-      newObject[changeFirstAlphabet(key)] = object[key];
-    } else if (object[key]?.length) {
-      newObject[changeFirstAlphabet(key)] = arrayChangeFunctin(object[key]);
+    const val = object[key];
+    const newKey = toPascalCase(key);
+
+    if (Array.isArray(val)) {
+      newObject[newKey] = arrayChangeFunction(val);
+    } else if (typeof val === "object" && val !== null) {
+      newObject[newKey] = mainChangeFunction(val);
     } else {
-      newObject[changeFirstAlphabet(key)] = mainChangeFunction(object[key]);
+      newObject[newKey] = val;
     }
   }
-
   return newObject;
 }
- 
 
-export default { mainChangeFunction, arrayChangeFunctin, justAdverts };
+export default { mainChangeFunction, arrayChangeFunction, justAdverts };

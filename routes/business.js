@@ -8,7 +8,7 @@ import { promisify } from "util";
 import BusinessSchema, { IbommarketBusinessIDs } from "../schema/business.js";
 import UserSchema from "../schema/user.js";
 import PostSchema from "../schema/posts.js";
-import change from "../utils/change.js";
+import { arrayChangeFunction, mainChangeFunction } from "../utils/change.js";
 import { createIbmId } from "../utils/createIbmId.js";
 import axios from "axios";
 
@@ -95,8 +95,10 @@ BusinessesRouter.get("/business/:ownerId", async (req, res) => {
       BusinessId: business.ibmId,
     };
     const finalBusiness = { ...sendBusiness, posts: sendPosts };
-    res.status(200).json(change.mainChangeFunction(finalBusiness));
+    console.log(finalBusiness);
+    res.status(200).json(arrayChangeFunction(finalBusiness));
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: error });
   }
 });
@@ -123,7 +125,7 @@ BusinessesRouter.get("/business-search", async (req, res) => {
       };
     });
 
-    res.status(200).json(change.arrayChangeFunctin(sendBusinesses));
+    res.status(200).json(arrayChangeFunction(sendBusinesses));
   } catch (error) {
     res.status(500).json({ message: error });
   }
@@ -185,7 +187,7 @@ BusinessesRouter.get("/business/my-business/:ownerId", async (req, res) => {
       LogoUrl: business.logo,
     };
     const finalBusiness = { ...sendBusiness, posts: sendPosts };
-    res.status(200).json(change.mainChangeFunction(finalBusiness));
+    res.status(200).json(mainChangeFunction(finalBusiness));
   } catch (error) {
     res.status(500).json({ message: error });
   }
@@ -398,4 +400,145 @@ BusinessesRouter.delete("/business/:_id", async (req, res) => {
   }
 });
 
+BusinessesRouter.get(
+  "/admin/admin-manager-get-businesses",
+  async (req, res) => {
+    try {
+      const { authorization } = req.headers;
+      if (!authorization || !authorization.startsWith("Bearer ")) {
+        return res.status(400).json({
+          message: {
+            name: "JsonWebTokenError",
+            message: "Invalid or missing token",
+          },
+        });
+      }
+
+      const token = authorization.split("Bearer ")[1];
+      const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+
+      // FIXED: Use proper logical OR
+      if (verifiedToken.role !== "admin" && verifiedToken.role !== "manager") {
+        return res.status(403).json({
+          message: {
+            name: "AuthorizationError",
+            message: "You are not authorized",
+          },
+        });
+      }
+
+      // Pagination parameters
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 20;
+      const skip = (page - 1) * limit;
+
+      const [posts, total] = await Promise.all([
+        BusinessSchema.find().skip(skip).limit(limit).sort({ createdAt: -1 }),
+        BusinessSchema.countDocuments(),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return res.status(200).json({
+        currentPage: page,
+        totalPages,
+        pageSize: limit,
+        totalItems: total,
+        items: posts,
+      });
+    } catch (error) {
+      console.error("Error in get-post route:", error);
+      return res.status(500).json({
+        message: {
+          name: "ServerError",
+          message: "Something went wrong",
+        },
+      });
+    }
+  }
+);
+
+BusinessesRouter.get("/admin-manager/get-business/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { authorization } = req.headers;
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+      return res.status(400).json({
+        message: {
+          name: "JsonWebTokenError",
+          message: "Invalid or missing token",
+        },
+      });
+    }
+
+    const token = authorization.split("Bearer ")[1];
+    const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+
+    // FIXED: Use proper logical OR
+    if (verifiedToken.role !== "admin" && verifiedToken.role !== "manager") {
+      return res.status(403).json({
+        message: {
+          name: "AuthorizationError",
+          message: "You are not authorized",
+        },
+      });
+    }
+
+    const business = await BusinessSchema.findOne({ _id: id });
+    if (!business) {
+      return res.status(404).json({ message: "This business does not exist" });
+    }
+
+    const posts = await PostSchema.find({ ownerId: business.ownerId });
+
+    res.status(200).json({ business, posts });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error });
+  }
+});
+
+BusinessesRouter.patch(
+  "/admin/admin-manager-edit-business/:_id",
+  async (req, res) => {
+    try {
+      const { _id } = req.params;
+      const { authorization } = req.headers;
+      if (!authorization || !authorization.startsWith("Bearer ")) {
+        return res.status(400).json({
+          message: {
+            name: "JsonWebTokenError",
+            message: "Invalid or missing token",
+          },
+        });
+      }
+
+      const token = authorization.split("Bearer ")[1];
+      const verifiedToken = jwt.verify(token, process.env.JWTSECRET);
+
+      // FIXED: Use proper logical OR
+      if (verifiedToken.role !== "admin" && verifiedToken.role !== "manager") {
+        return res.status(403).json({
+          message: {
+            name: "AuthorizationError",
+            message: "You are not authorized",
+          },
+        });
+      }
+
+      const business = await BusinessSchema.findOne({ _id });
+      if (!business) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+
+      business.adminStatus = req.body.adminStatus;
+      business.rejectedReason = req.body.rejectedReason || [];
+      await business.save();
+      res.status(200).json({ business });
+    } catch (error) {
+      res.status(500).json({ message: error });
+    }
+  }
+);
 export default BusinessesRouter;

@@ -59,7 +59,7 @@ UrgentRequestRouter.get(
       });
       res
         .status(200)
-        .json(change.arrayChangeFunctin(shuffleArray(sendRequests)));
+        .json(change.arrayChangeFunction(shuffleArray(sendRequests)));
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }

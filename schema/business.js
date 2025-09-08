@@ -56,6 +56,20 @@ const schema = new Schema(
       type: Boolean,
       default: false,
     },
+    adminStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    rejectedReason: {
+      type: [
+        {
+          field: String,
+          description: String,
+        },
+      ],
+      default: [],
+    },
     postsDetails: {
       type: [],
       required: true,
