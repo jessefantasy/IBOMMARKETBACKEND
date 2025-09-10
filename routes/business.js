@@ -94,7 +94,10 @@ BusinessesRouter.get("/business/:ownerId", async (req, res) => {
       LogoUrl: business.logo,
       BusinessId: business.ibmId,
     };
-    const finalBusiness = { ...sendBusiness, posts: sendPosts };
+    const finalBusiness = {
+      ...sendBusiness,
+      posts: mainChangeFunction(sendPosts),
+    };
     console.log(finalBusiness);
     res.status(200).json(arrayChangeFunction(finalBusiness));
   } catch (error) {
@@ -187,8 +190,9 @@ BusinessesRouter.get("/business/my-business/:ownerId", async (req, res) => {
       LogoUrl: business.logo,
     };
     const finalBusiness = { ...sendBusiness, posts: sendPosts };
-    res.status(200).json(mainChangeFunction(finalBusiness));
+    res.status(200).json(finalBusiness);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: error });
   }
 });
